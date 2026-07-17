@@ -1,0 +1,18 @@
+@model string
+
+@{
+    var durumSinifi = Model switch
+    {
+        "Açık" => "task-status--open",
+        "Devam Ediyor" => "task-status--progress",
+        "QA / Test Bekleyen" => "task-status--qa",
+        "Bug / Hata" => "task-status--bug",
+        "Tamamlandı" => "task-status--completed",
+        _ => "task-status--other"
+    };
+}
+
+<span class="task-status @durumSinifi">
+    <span class="task-status__dot" aria-hidden="true"></span>
+    @Model
+</span>

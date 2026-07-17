@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <meta name="color-scheme" content="light" />
+    <title>@ViewData["Title"] - Yönetim Paneli</title>
+
+    <link rel="stylesheet" href="~/css/tailwind.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="bg-slate-50 text-slate-700 antialiased">
+
+    <!-- Klavyeyle gezen kullanıcıların doğrudan ana içeriğe geçmesini sağlar. -->
+    <a class="skip-link" href="#mainContent">Ana içeriğe geç</a>
+
+    <div class="flex min-h-screen overflow-hidden">
+
+        <!-- Mobilde sidebar açıldığında arka planı kapatır. -->
+        <button id="sidebarBackdrop"
+                type="button"
+                aria-label="Menüyü kapat"
+                class="fixed inset-0 z-30 hidden bg-slate-950/45 backdrop-blur-[1px] lg:hidden">
+        </button>
+
+        <aside id="sidebar"
+               tabindex="-1"
+               class="app-sidebar fixed inset-y-0 left-0 z-40 -translate-x-full border-r border-slate-800 bg-slate-900 lg:static lg:translate-x-0"
+               aria-label="Ana menü">
+
+            <!--
+                Masaüstü küçültme butonu sidebar'ın DIŞ KENARINDA durur.
+                Böylece logo ile aynı alana sıkışıp ikon üst üste bindirmez.
+            -->
+            <button id="desktopSidebarToggle"
+                    type="button"
+                    title="Menüyü küçült"
+                    aria-label="Menüyü küçült"
+                    aria-expanded="true"
+                    aria-controls="sidebar"
+                    class="app-sidebar__desktop-toggle hidden h-9 w-9 items-center justify-center rounded-full border border-slate-700 bg-slate-900 text-slate-300 shadow-lg transition hover:border-teal-500 hover:text-teal-400 lg:inline-flex">
+                <svg id="sidebarToggleIcon" class="h-4 w-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+            </button>
+
+            <div class="flex h-full flex-col">
+                <div class="sidebar-brand-row flex min-h-[76px] items-center justify-between border-b border-slate-800 px-4">
+                    <a asp-controller="Home" asp-action="Index" class="flex min-w-0 items-center gap-3 overflow-hidden" title="Yönetim Paneli">
+                        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-teal-500 text-white shadow-lg shadow-teal-500/20">
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                        </div>
+
+                        <div class="sidebar-brand-copy min-w-0">
+                            <div class="truncate text-base font-extrabold leading-tight text-white">Yönetim Paneli</div>
+                            <div class="truncate text-xs font-bold uppercase tracking-[0.18em] text-teal-400">Kurumsal İş Akışı</div>
+                        </div>
+                    </a>
+
+                    <!-- Mobil kapatma butonu masaüstü toggle'dan ayrıdır. -->
+                    <button id="mobileSidebarClose"
+                            type="button"
+                            aria-label="Menüyü kapat"
+                            class="inline-flex h-10 w-10 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-800 hover:text-white lg:hidden">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <nav class="flex-1 space-y-2 overflow-y-auto px-3 py-5">
+                    @{
+                        var currentController = ViewContext.RouteData.Values["Controller"]?.ToString();
+                        var currentAction = ViewContext.RouteData.Values["Action"]?.ToString();
+                        var isAdmin = User.IsInRole("Admin");
+                    }
+
+                    <a asp-controller="Home"
+                       asp-action="Index"
+                       title="Anasayfa"
+                       aria-current="@(currentController == "Home" ? "page" : null)"
+                       class="sidebar-nav-link flex items-center rounded-2xl px-4 py-3.5 transition-all duration-200 @(currentController == "Home" ? "border border-teal-500/30 bg-teal-500/20 font-bold text-teal-400" : "text-slate-400 hover:bg-slate-800 hover:text-white")">
+                        <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                        </svg>
+                        <span class="sidebar-label ml-3 whitespace-nowrap">Anasayfa</span>
+                    </a>
+
+                    <a asp-controller="Profil"
+                       asp-action="Index"
+                       title="Profilim"
+                       aria-current="@(currentController == "Profil" ? "page" : null)"
+                       class="sidebar-nav-link flex items-center rounded-2xl px-4 py-3.5 transition-all duration-200 @(currentController == "Profil" ? "border border-teal-500/30 bg-teal-500/20 font-bold text-teal-400" : "text-slate-400 hover:bg-slate-800 hover:text-white")">
+                        <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A9 9 0 1118.88 6.196M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span class="sidebar-label ml-3 whitespace-nowrap">Profilim</span>
+                    </a>
+
+                    <a asp-controller="Gorev"
+                       asp-action="Index"
+                       title="Görevler"
+                       aria-current="@(currentController == "Gorev" ? "page" : null)"
+                       class="sidebar-nav-link flex items-center rounded-2xl px-4 py-3.5 transition-all duration-200 @(currentController == "Gorev" ? "border border-teal-500/30 bg-teal-500/20 font-bold text-teal-400" : "text-slate-400 hover:bg-slate-800 hover:text-white")">
+                        <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                        </svg>
+                        <span class="sidebar-label ml-3 whitespace-nowrap">@(isAdmin ? "Tüm Görevler" : "Görevlerim")</span>
+                    </a>
+
+                    <div class="sidebar-section-label sidebar-label px-4 pt-2 text-xs font-extrabold uppercase tracking-[0.18em] text-slate-600">Planlama</div>
+
+                    <a asp-controller="Planlama"
+                       asp-action="Kanban"
+                       title="Kanban"
+                       aria-current="@(currentController == "Planlama" && currentAction == "Kanban" ? "page" : null)"
+                       class="sidebar-nav-link flex items-center rounded-2xl px-4 py-3 transition-all duration-200 @(currentController == "Planlama" && currentAction == "Kanban" ? "border border-teal-500/30 bg-teal-500/20 font-bold text-teal-400" : "text-slate-400 hover:bg-slate-800 hover:text-white")">
+                        <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5h4v14H4V5zm6 0h4v9h-4V5zm6 0h4v11h-4V5z" /></svg>
+                        <span class="sidebar-label ml-3 whitespace-nowrap">Kanban</span>
+                    </a>
+
+                    <a asp-controller="Planlama"
+                       asp-action="Takvim"
+                       title="Görev Takvimi"
+                       aria-current="@(currentController == "Planlama" && currentAction == "Takvim" ? "page" : null)"
+                       class="sidebar-nav-link flex items-center rounded-2xl px-4 py-3 transition-all duration-200 @(currentController == "Planlama" && currentAction == "Takvim" ? "border border-teal-500/30 bg-teal-500/20 font-bold text-teal-400" : "text-slate-400 hover:bg-slate-800 hover:text-white")">
+                        <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M5 11h14M5 5h14v16H5V5z" /></svg>
+                        <span class="sidebar-label ml-3 whitespace-nowrap">Takvim</span>
+                    </a>
+
+                    <a asp-controller="Planlama"
+                       asp-action="IsYuku"
+                       title="Ekip İş Yükü"
+                       aria-current="@(currentController == "Planlama" && currentAction == "IsYuku" ? "page" : null)"
+                       class="sidebar-nav-link flex items-center rounded-2xl px-4 py-3 transition-all duration-200 @(currentController == "Planlama" && currentAction == "IsYuku" ? "border border-teal-500/30 bg-teal-500/20 font-bold text-teal-400" : "text-slate-400 hover:bg-slate-800 hover:text-white")">
+                        <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-4-4M7 20H2v-2a4 4 0 014-4m11-3a4 4 0 10-8 0 4 4 0 008 0z" /></svg>
+                        <span class="sidebar-label ml-3 whitespace-nowrap">İş Yükü</span>
+                    </a>
+
+                    <a asp-controller="Planlama"
+                       asp-action="Raporlar"
+                       title="Görev Raporları"
+                       aria-current="@(currentController == "Planlama" && currentAction == "Raporlar" ? "page" : null)"
+                       class="sidebar-nav-link flex items-center rounded-2xl px-4 py-3 transition-all duration-200 @(currentController == "Planlama" && currentAction == "Raporlar" ? "border border-teal-500/30 bg-teal-500/20 font-bold text-teal-400" : "text-slate-400 hover:bg-slate-800 hover:text-white")">
+                        <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 19V9m5 10V5m5 14v-7m5 7V3" /></svg>
+                        <span class="sidebar-label ml-3 whitespace-nowrap">Raporlar</span>
+                    </a>
+
+                    <a asp-controller="Bildirim"
+                       asp-action="Index"
+                       title="Bildirimler"
+                       aria-current="@(currentController == "Bildirim" ? "page" : null)"
+                       class="sidebar-nav-link flex items-center rounded-2xl px-4 py-3.5 transition-all duration-200 @(currentController == "Bildirim" ? "border border-teal-500/30 bg-teal-500/20 font-bold text-teal-400" : "text-slate-400 hover:bg-slate-800 hover:text-white")">
+                        <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h11zm0 0a3 3 0 11-6 0h6z" />
+                        </svg>
+                        <span class="sidebar-label ml-3 whitespace-nowrap">Bildirimler</span>
+                    </a>
+
+                    <a asp-controller="Organizasyon"
+                       asp-action="Index"
+                       title="Organizasyon Şeması"
+                       aria-current="@(currentController == "Organizasyon" && currentAction != "Yonetim" ? "page" : null)"
+                       class="sidebar-nav-link flex items-center rounded-2xl px-4 py-3.5 transition-all duration-200 @(currentController == "Organizasyon" && currentAction != "Yonetim" ? "border border-teal-500/30 bg-teal-500/20 font-bold text-teal-400" : "text-slate-400 hover:bg-slate-800 hover:text-white")">
+                        <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6a3 3 0 100-6 3 3 0 000 6zM6 14a3 3 0 100-6 3 3 0 000 6zm12 0a3 3 0 100-6 3 3 0 000 6zM6 22a3 3 0 100-6 3 3 0 000 6zm12 0a3 3 0 100-6 3 3 0 000 6zM12 6v3m0 0H6v2m6-2h6v2M6 14v2m12-2v2" />
+                        </svg>
+                        <span class="sidebar-label ml-3 whitespace-nowrap">Organizasyon</span>
+                    </a>
+
+                    @if (isAdmin)
+                    {
+                        <a asp-controller="Kullanicilar"
+                           asp-action="Index"
+                           title="Kullanıcılar"
+                           aria-current="@(currentController == "Kullanicilar" ? "page" : null)"
+                           class="sidebar-nav-link flex items-center rounded-2xl px-4 py-3.5 transition-all duration-200 @(currentController == "Kullanicilar" ? "border border-teal-500/30 bg-teal-500/20 font-bold text-teal-400" : "text-slate-400 hover:bg-slate-800 hover:text-white")">
+                            <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87M15 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                            <span class="sidebar-label ml-3 whitespace-nowrap">Kullanıcılar</span>
+                        </a>
+
+                        <a asp-controller="Organizasyon"
+                           asp-action="Yonetim"
+                           title="Birim Yönetimi"
+                           aria-current="@(currentController == "Organizasyon" && currentAction == "Yonetim" ? "page" : null)"
+                           class="sidebar-nav-link flex items-center rounded-2xl px-4 py-3.5 transition-all duration-200 @(currentController == "Organizasyon" && currentAction == "Yonetim" ? "border border-teal-500/30 bg-teal-500/20 font-bold text-teal-400" : "text-slate-400 hover:bg-slate-800 hover:text-white")">
+                            <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 16v-2m8-6h-2M6 12H4m13.657-5.657l-1.414 1.414M7.757 16.243l-1.414 1.414m11.314 0l-1.414-1.414M7.757 7.757L6.343 6.343M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span class="sidebar-label ml-3 whitespace-nowrap">Birim Yönetimi</span>
+                        </a>
+                    }
+                </nav>
+
+                <div class="border-t border-slate-800 p-4">
+                    <div class="sidebar-status-card rounded-2xl border border-slate-800 bg-slate-800/70 p-4">
+                        <div class="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+                            <svg class="h-4 w-4 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Sistem Durumu
+                        </div>
+                        <div class="text-sm font-semibold text-white">Hiyerarşik görev ve kullanıcı yönetimi aktif.</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <div id="appShellMain" class="flex min-w-0 flex-1 flex-col">
+            <header class="app-topbar sticky top-0 z-20 border-b border-slate-200 bg-white/95 px-4 py-4 backdrop-blur lg:px-8">
+                <div class="app-topbar__inner flex items-center justify-between gap-4">
+                    <div class="flex min-w-0 items-center gap-3">
+                        <button id="mobileSidebarOpen"
+                                type="button"
+                                aria-label="Menüyü aç"
+                                aria-expanded="false"
+                                aria-controls="sidebar"
+                                class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-600 transition hover:bg-slate-100 lg:hidden">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                        </button>
+
+                        <div class="min-w-0">
+                            <div class="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">Yönetim Paneli</div>
+                            <div class="truncate text-base font-bold text-slate-800">@ViewData["Title"]</div>
+                        </div>
+                    </div>
+
+                    <div class="app-topbar__actions flex shrink-0 items-center gap-3">
+                        @if (User.Identity != null && User.Identity.IsAuthenticated)
+                        {
+                            <button id="globalSearchOpen"
+                                    type="button"
+                                    class="global-search-trigger"
+                                    aria-haspopup="dialog"
+                                    aria-controls="globalSearchDialog"
+                                    title="Görev veya çalışan ara">
+                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m1.35-5.65a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                                <span class="global-search-trigger__label">Görev veya çalışan ara</span>
+                                <kbd class="global-search-trigger__shortcut"><span>Ctrl</span><span>K</span></kbd>
+                            </button>
+
+                            @await Component.InvokeAsync("BildirimMenu")
+
+                            <a asp-controller="Profil"
+                               asp-action="Index"
+                               class="hidden items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 transition hover:border-teal-200 hover:bg-teal-50/60 sm:flex"
+                               title="Profilimi aç">
+                                <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-100 text-teal-700">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A7 7 0 0112 15a7 7 0 016.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="text-xs font-bold uppercase tracking-wider text-slate-400">Profilim</div>
+                                    <div class="max-w-[220px] truncate text-sm font-semibold text-slate-800">@User.Identity.Name</div>
+                                </div>
+                            </a>
+                            <form asp-controller="Auth"
+                                  asp-action="Logout"
+                                  method="post"
+                                  class="inline-flex">
+                                <button type="submit"
+                                        class="app-topbar__logout inline-flex items-center gap-2 rounded-xl bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-500 hover:text-white"
+                                        title="Güvenli çıkış yap">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                    </svg>
+                                    <span class="hidden sm:inline">Çıkış Yap</span>
+                                </button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            </header>
+
+            <main id="mainContent"
+                  tabindex="-1"
+                  class="min-w-0 flex-1 overflow-y-auto px-4 py-5 lg:px-8 lg:py-6">
+                @await Html.PartialAsync("_FlashMessages")
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    @if (User.Identity != null && User.Identity.IsAuthenticated)
+    {
+        <dialog id="globalSearchDialog"
+                class="global-search-dialog"
+                aria-labelledby="globalSearchTitle"
+                data-search-url="@Url.Action("Sonuclar", "Arama")">
+            <div class="global-search-dialog__shell">
+                <header class="global-search-dialog__header">
+                    <div>
+                        <h2 id="globalSearchTitle">Hızlı arama ve komutlar</h2>
+                        <p>Görevleri, çalışanları veya uygulama sayfalarını bulun.</p>
+                    </div>
+                    <button id="globalSearchClose" type="button" aria-label="Arama penceresini kapat" title="Kapat">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </header>
+
+                <div class="global-search-input-wrap">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m1.35-5.65a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <label class="sr-only" for="globalSearchInput">Görev veya çalışan ara</label>
+                    <input id="globalSearchInput"
+                           type="search"
+                           maxlength="60"
+                           placeholder="En az 2 karakter yazın veya bir komut seçin..."
+                           autocomplete="off"
+                           aria-controls="globalSearchResults"
+                           aria-autocomplete="list" />
+                    <kbd>Esc</kbd>
+                </div>
+
+                <div id="globalSearchStatus" class="global-search-status" aria-live="polite"></div>
+
+                <div id="globalSearchResults" class="global-search-results" role="listbox" aria-label="Arama sonuçları" hidden></div>
+
+                <div id="globalSearchCommands" class="global-search-commands">
+                    <section>
+                        <div class="global-search-section-title">
+                            <span>Hızlı işlemler</span>
+                            <small>Komut seçmek için ↑ ↓ ve Enter</small>
+                        </div>
+                        <div class="global-search-command-grid">
+                            <a asp-controller="Gorev" asp-action="Ekle" data-command-item data-command-keywords="yeni görev ekle oluştur">
+                                <span class="global-search-command-icon is-primary">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                                </span>
+                                <span><strong>Yeni görev oluştur</strong><small>Görev atama formunu aç</small></span>
+                            </a>
+                            <a asp-controller="Bildirim" asp-action="Index" asp-route-filtre="okunmamis" data-command-item data-command-keywords="bildirim okunmamış uyarı">
+                                <span class="global-search-command-icon is-warning">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h11z" /></svg>
+                                </span>
+                                <span><strong>Okunmamış bildirimler</strong><small>Bekleyen gelişmeleri görüntüle</small></span>
+                            </a>
+                        </div>
+                    </section>
+
+                    <section>
+                        <div class="global-search-section-title"><span>Sayfalar</span></div>
+                        <div class="global-search-page-list">
+                            <a asp-controller="Home" asp-action="Index" data-command-item data-command-keywords="anasayfa dashboard özet">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l9-9 9 9M5 10v10h14V10" /></svg>
+                                <span>Anasayfa</span><kbd>G H</kbd>
+                            </a>
+                            <a asp-controller="Gorev" asp-action="Index" data-command-item data-command-keywords="görevler işler liste">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12h12V7a2 2 0 00-2-2h-2" /></svg>
+                                <span>Görevler</span><kbd>G T</kbd>
+                            </a>
+                            <a asp-controller="Planlama" asp-action="Kanban" data-command-item data-command-keywords="kanban pano iş akışı planlama">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5h4v14H4V5zm6 0h4v9h-4V5zm6 0h4v11h-4V5z" /></svg>
+                                <span>Kanban panosu</span><span></span>
+                            </a>
+                            <a asp-controller="Planlama" asp-action="Takvim" data-command-item data-command-keywords="takvim tarih planlama görev">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M5 11h14M5 5h14v16H5V5z" /></svg>
+                                <span>Görev takvimi</span><span></span>
+                            </a>
+                            <a asp-controller="Planlama" asp-action="IsYuku" data-command-item data-command-keywords="iş yükü ekip kapasite çalışan">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-4-4M7 20H2v-2a4 4 0 014-4m11-3a4 4 0 10-8 0 4 4 0 008 0z" /></svg>
+                                <span>Ekip iş yükü</span><span></span>
+                            </a>
+                            <a asp-controller="Planlama" asp-action="Raporlar" data-command-item data-command-keywords="rapor analiz performans metrik">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 19V9m5 10V5m5 14v-7m5 7V3" /></svg>
+                                <span>Görev raporları</span><span></span>
+                            </a>
+                            <a asp-controller="Profil" asp-action="Index" data-command-item data-command-keywords="profil hesabım kullanıcı">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0zM5 20a7 7 0 0114 0" /></svg>
+                                <span>Profilim</span><span></span>
+                            </a>
+                            <a asp-controller="Organizasyon" asp-action="Index" data-command-item data-command-keywords="organizasyon şema çalışan ekip">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6a3 3 0 100-6 3 3 0 000 6zM6 14a3 3 0 100-6 3 3 0 000 6zm12 0a3 3 0 100-6 3 3 0 000 6zM12 6v3H6v2m6-2h6v2" /></svg>
+                                <span>Organizasyon</span><span></span>
+                            </a>
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <a asp-controller="Kullanicilar" asp-action="Index" data-command-item data-command-keywords="kullanıcılar çalışan yönetim admin">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.9M9 20H4v-2a4 4 0 013-3.9M15 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                                    <span>Kullanıcı yönetimi</span><span></span>
+                                </a>
+                                <a asp-controller="Organizasyon" asp-action="Yonetim" data-command-item data-command-keywords="departman unvan birim yönetimi admin">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 16v-2m8-6h-2M6 12H4m11 0a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                    <span>Birim yönetimi</span><span></span>
+                                </a>
+                            }
+                        </div>
+                    </section>
+                </div>
+
+                <footer class="global-search-dialog__footer">
+                    <span><kbd>↑</kbd><kbd>↓</kbd> seç</span>
+                    <span><kbd>Enter</kbd> aç</span>
+                    <span><kbd>Esc</kbd> kapat</span>
+                </footer>
+            </div>
+        </dialog>
+    }
+
+    <dialog id="appConfirmDialog" class="app-confirm-dialog" data-tone="danger" aria-labelledby="appConfirmTitle" aria-describedby="appConfirmMessage">
+        <div class="app-confirm-dialog__body">
+            <div class="app-confirm-dialog__icon" aria-hidden="true">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5.07 19h13.86a2 2 0 001.74-3L13.74 4a2 2 0 00-3.48 0L3.33 16A2 2 0 005.07 19z" />
+                </svg>
+            </div>
+            <div class="min-w-0">
+                <h2 id="appConfirmTitle" class="app-confirm-dialog__title">İşlemi onaylayın</h2>
+                <p id="appConfirmMessage" class="app-confirm-dialog__message"></p>
+            </div>
+        </div>
+        <div class="app-confirm-dialog__actions">
+            <button id="appConfirmCancel" type="button" class="app-button app-button--secondary">Vazgeç</button>
+            <button id="appConfirmAccept" type="button" class="app-button app-button--danger">Onayla</button>
+        </div>
+    </dialog>
+
+    <script src="~/js/site.js" asp-append-version="true" defer></script>
+    <script src="~/js/layout.js" asp-append-version="true" defer></script>
+    <script src="~/js/global-search.js" asp-append-version="true" defer></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

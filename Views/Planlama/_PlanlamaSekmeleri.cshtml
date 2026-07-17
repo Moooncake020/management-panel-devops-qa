@@ -1,0 +1,22 @@
+@{
+    var action = ViewContext.RouteData.Values["Action"]?.ToString() ?? "Kanban";
+}
+
+<nav class="planning-tabs" aria-label="Planlama görünümleri">
+    <a asp-controller="Planlama" asp-action="Kanban" class="planning-tab @(action == "Kanban" ? "is-active" : string.Empty)" aria-current="@(action == "Kanban" ? "page" : null)">
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5h4v14H4V5zm6 0h4v9h-4V5zm6 0h4v11h-4V5z" /></svg>
+        Kanban
+    </a>
+    <a asp-controller="Planlama" asp-action="Takvim" class="planning-tab @(action == "Takvim" ? "is-active" : string.Empty)" aria-current="@(action == "Takvim" ? "page" : null)">
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M5 11h14M5 5h14v16H5V5z" /></svg>
+        Takvim
+    </a>
+    <a asp-controller="Planlama" asp-action="IsYuku" class="planning-tab @(action == "IsYuku" ? "is-active" : string.Empty)" aria-current="@(action == "IsYuku" ? "page" : null)">
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-4-4M7 20H2v-2a4 4 0 014-4m11-3a4 4 0 10-8 0 4 4 0 008 0z" /></svg>
+        İş yükü
+    </a>
+    <a asp-controller="Planlama" asp-action="Raporlar" class="planning-tab @(action == "Raporlar" ? "is-active" : string.Empty)" aria-current="@(action == "Raporlar" ? "page" : null)">
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 19V9m5 10V5m5 14v-7m5 7V3" /></svg>
+        Raporlar
+    </a>
+</nav>

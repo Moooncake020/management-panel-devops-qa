@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <meta name="color-scheme" content="light" />
+    <title>@ViewData["Title"] - Yönetim Paneli</title>
+    <link rel="stylesheet" href="~/css/tailwind.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-700 antialiased">
+    <a class="skip-link" href="#publicMainContent">Ana içeriğe geç</a>
+    <header class="border-b border-slate-200 bg-white px-4 py-4 sm:px-6">
+        <div class="mx-auto flex max-w-6xl items-center gap-3">
+            <a asp-controller="Auth" asp-action="Login" class="flex items-center gap-3" title="Giriş sayfasına dön">
+                <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-teal-600 text-white shadow-lg shadow-teal-600/20" aria-hidden="true">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.6-4A12 12 0 0112 3a12 12 0 01-8.6 3A12 12 0 003 9c0 5.6 3.8 10.3 9 11.6 5.2-1.3 9-6 9-11.6 0-1-.1-2-.4-3z" />
+                    </svg>
+                </span>
+                <span>
+                    <strong class="block text-sm font-extrabold text-slate-900">Yönetim Paneli</strong>
+                    <small class="block text-xs font-bold uppercase tracking-[0.18em] text-teal-600">Kurumsal İş Akışı</small>
+                </span>
+            </a>
+        </div>
+    </header>
+    <main id="publicMainContent" tabindex="-1">
+        @RenderBody()
+    </main>
+    <script src="~/js/site.js" asp-append-version="true" defer></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

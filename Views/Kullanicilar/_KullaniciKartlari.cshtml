@@ -1,0 +1,167 @@
+@using YonetimPaneli.Models.Enums
+@model KullaniciListeViewModel
+
+@{
+    var aktifKullaniciId = Model.AktifKullaniciId;
+}
+
+<div class="user-card-view grid grid-cols-1 gap-4 lg:grid-cols-2">
+    @foreach (var user in Model.Kullanicilar)
+    {
+        var departmanAdi = user.Departman?.Ad ?? "Atanmamış";
+        var unvanAdi = user.Unvan?.Ad ?? "Atanmamış";
+        var kidemAdi = user.KidemSeviyesi == KidemSeviyesi.MidLevel ? "Mid-Level" : user.KidemSeviyesi.ToString();
+        var organizasyonRoluAdi = user.OrganizasyonRolu switch
+        {
+            OrganizasyonRolu.Calisan => "Çalışan",
+            OrganizasyonRolu.TakimLideri => "Takım Lideri",
+            OrganizasyonRolu.DepartmanMuduru => "Departman Müdürü",
+            OrganizasyonRolu.Direktor => "Direktör",
+            OrganizasyonRolu.GenelMudur => "Genel Müdür",
+            _ => user.OrganizasyonRolu.ToString()
+        };
+        var yoneticiAdi = user.Yonetici?.TamAd ?? "Yönetici yok";
+        var hesapKilitliMi = user.KilitBitisTarihi.HasValue && user.KilitBitisTarihi.Value > DateTime.UtcNow;
+        var basHarf = string.IsNullOrWhiteSpace(user.Ad) ? "?" : user.Ad[..1].ToUpperInvariant();
+
+        <article class="user-card">
+            <div class="user-card__header">
+                <div class="flex min-w-0 items-center gap-3">
+                    <div class="user-avatar user-avatar--lg">@basHarf</div>
+                    <div class="min-w-0">
+                        <a asp-controller="Profil"
+                           asp-action="Index"
+                           asp-route-id="@user.Id"
+                           class="block truncate text-base font-extrabold text-slate-800 transition hover:text-teal-700"
+                           title="@user.TamAd">@user.TamAd</a>
+                        <p class="mt-1 truncate text-sm text-slate-500" title="@user.Email">@user.Email</p>
+                    </div>
+                </div>
+
+                <div class="flex shrink-0 flex-col items-end gap-2">
+                    <span class="status-badge @(user.AktifMi ? "status-badge--success" : "status-badge--danger")">
+                        <span class="status-badge__dot"></span>
+                        @(user.AktifMi ? "Aktif" : "Pasif")
+                    </span>
+                    @if (hesapKilitliMi)
+                    {
+                        <span class="status-badge status-badge--warning">
+                            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4" /></svg>
+                            Kilitli
+                        </span>
+                    }
+                </div>
+            </div>
+
+            <dl class="user-card__facts">
+                <div class="user-fact">
+                    <dt>Departman</dt>
+                    <dd>@departmanAdi</dd>
+                    <span>@unvanAdi · @kidemAdi</span>
+                </div>
+                <div class="user-fact">
+                    <dt>Organizasyon rolü</dt>
+                    <dd>@organizasyonRoluAdi</dd>
+                    <span>@yoneticiAdi</span>
+                </div>
+            </dl>
+
+            <div class="user-card__footer">
+                <span class="status-badge @(user.Role == "Admin" ? "status-badge--admin" : "status-badge--neutral")">
+                    @(user.Role == "Admin" ? "Admin yetkisi" : "Standart kullanıcı")
+                </span>
+
+                <div class="flex items-center gap-2">
+                    <a asp-controller="Kullanicilar"
+                       asp-action="Duzenle"
+                       asp-route-id="@user.Id"
+                       class="app-button app-button--secondary app-button--sm">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                        Düzenle
+                    </a>
+
+                    <details class="action-menu">
+                        <summary class="app-icon-button cursor-pointer" aria-label="@user.TamAd için diğer işlemler" title="Diğer işlemler">
+                            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg>
+                        </summary>
+                        <div class="action-menu__panel text-left">
+                            <a asp-controller="Profil" asp-action="Index" asp-route-id="@user.Id" class="action-menu__item">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A9 9 0 1118.88 6.196M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                Profili görüntüle
+                            </a>
+
+                            @if (hesapKilitliMi)
+                            {
+                                <form asp-controller="Kullanicilar"
+                                      asp-action="KilidiAc"
+                                      asp-route-id="@user.Id"
+                                      method="post"
+                                      data-confirm="@user.TamAd kullanıcısının giriş kilidi kaldırılacak ve başarısız giriş sayacı sıfırlanacak."
+                                      data-confirm-title="Giriş kilidini kaldır"
+                                      data-confirm-action="Kilidi kaldır"
+                                      data-confirm-tone="primary">
+                                    <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                                    <button type="submit" class="action-menu__item action-menu__item--warning">
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a3 3 0 00-5.83-1H7a2 2 0 00-2 2v10h14V8a2 2 0 00-2-2h-2" /></svg>
+                                        Giriş kilidini kaldır
+                                    </button>
+                                </form>
+                            }
+
+                            @if (user.AktifMi && user.Id != aktifKullaniciId)
+                            {
+                                <a asp-controller="Kullanicilar" asp-action="GorevleriDevret" asp-route-id="@user.Id" class="action-menu__item action-menu__item--warning">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4M16 17H4m0 0l4 4m-4-4l4-4" /></svg>
+                                    Görevleri devret
+                                </a>
+                            }
+
+                            @if (user.AktifMi)
+                            {
+                                if (user.Id != aktifKullaniciId)
+                                {
+                                    <form asp-controller="Kullanicilar"
+                                          asp-action="PasifYap"
+                                          asp-route-id="@user.Id"
+                                          method="post"
+                                          data-confirm="@user.TamAd kullanıcısı pasif yapılacak. Kullanıcı sisteme giriş yapamayacak."
+                                          data-confirm-title="Kullanıcıyı pasif yap"
+                                          data-confirm-action="Pasif yap"
+                                          data-confirm-tone="danger">
+                                        <button type="submit" class="action-menu__item action-menu__item--danger">
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 115.636 5.636a9 9 0 0112.728 12.728zM8 12h8" /></svg>
+                                            Pasifleştir
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <div class="action-menu__item is-disabled" aria-disabled="true">
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A9 9 0 1118.88 6.196M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                        Aktif oturumunuz
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <form asp-controller="Kullanicilar"
+                                      asp-action="AktifYap"
+                                      asp-route-id="@user.Id"
+                                      method="post"
+                                      data-confirm="@user.TamAd kullanıcısı tekrar aktif yapılacak."
+                                      data-confirm-title="Kullanıcıyı aktifleştir"
+                                      data-confirm-action="Aktifleştir"
+                                      data-confirm-tone="primary">
+                                    <button type="submit" class="action-menu__item action-menu__item--success">
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                                        Aktif yap
+                                    </button>
+                                </form>
+                            }
+                        </div>
+                    </details>
+                </div>
+            </div>
+        </article>
+    }
+</div>

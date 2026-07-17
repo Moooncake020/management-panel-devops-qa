@@ -1,0 +1,64 @@
+@model YonetimPaneli.ViewModels.Planlama.IsYukuIndexViewModel
+@{
+    ViewData["Title"] = "Ekip İş Yükü";
+}
+
+<div class="page-stack planning-page">
+    <section class="app-surface page-heading">
+        <div class="page-heading__content">
+            <span class="page-heading__icon" aria-hidden="true"><svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-4-4M7 20H2v-2a4 4 0 014-4m11-3a4 4 0 10-8 0 4 4 0 008 0z" /></svg></span>
+            <div><div class="page-eyebrow">Kapasite görünümü</div><h1 class="page-title">Ekip iş yükü</h1><p class="page-description">Aktif, geciken ve kritik görevleri çalışan bazında karşılaştırarak dağılım dengesini görün.</p></div>
+        </div>
+        <div class="page-heading__actions"><a asp-controller="Gorev" asp-action="Ekle" class="app-button app-button--primary">Görev ata</a></div>
+    </section>
+
+    <partial name="_PlanlamaSekmeleri" />
+
+    <section class="planning-summary-grid" aria-label="İş yükü özeti">
+        <div class="planning-summary-card"><span>Aktif görev</span><strong>@Model.ToplamAktifGorev</strong><small>seçili çalışanlarda</small></div>
+        <div class="planning-summary-card is-danger"><span>Geciken</span><strong>@Model.ToplamGeciken</strong><small>müdahale gereken</small></div>
+        <div class="planning-summary-card is-warning"><span>Yüksek yük</span><strong>@Model.YuksekYukluKisi</strong><small>yüksek veya kritik seviyede</small></div>
+        <div class="planning-summary-card is-primary"><span>Atanmamış</span><strong>@Model.AtanmamisGorev</strong><small>sahibi belirlenmemiş iş</small></div>
+    </section>
+
+    <section class="app-surface workload-toolbar">
+        <form method="get" asp-action="IsYuku">
+            <div class="app-field"><label class="app-label" for="departmanId">Departman filtresi</label><select id="departmanId" name="departmanId" class="app-select border border-slate-200 px-3" data-auto-submit><option value="">Tüm erişilebilir departmanlar</option>@foreach (var dep in Model.Departmanlar) { <option value="@dep.Id" selected="@(Model.DepartmanId == dep.Id)">@dep.Ad</option> }</select></div>
+            @if (Model.DepartmanId.HasValue) { <a asp-action="IsYuku" class="app-button app-button--tertiary">Filtreyi temizle</a> }
+        </form>
+        <div class="workload-method-note"><strong>Yük puanı nasıl hesaplanır?</strong><span>Aktif görev, iş akışı aşaması, kritik öncelik, gecikme ve 7 gün içindeki teslimler ağırlıklandırılır. Bu değer gerçek çalışma saati değil, karşılaştırmalı risk göstergesidir.</span></div>
+    </section>
+
+    <section class="app-surface app-surface--flush">
+        <header class="workload-list-header"><div><h2 class="section-title">Çalışan kapasitesi</h2><p class="section-description">En yüksek risk puanına sahip çalışanlar üstte gösterilir.</p></div><span class="result-count">@Model.Kullanicilar.Count çalışan</span></header>
+        @if (Model.Kullanicilar.Count == 0)
+        {
+            <div class="empty-state py-16 text-center"><h2 class="section-title">Bu filtrede çalışan bulunamadı</h2><p class="empty-state__description">Departman filtresini temizleyerek tekrar deneyin.</p></div>
+        }
+        else
+        {
+            <div class="workload-table-wrap">
+                <table class="workload-table">
+                    <caption class="sr-only">Çalışanlara göre ekip iş yükü karşılaştırması</caption>
+                    <thead><tr><th scope="col">Çalışan</th><th scope="col">Yük seviyesi</th><th scope="col">Aktif</th><th scope="col">Geciken</th><th scope="col">Kritik</th><th scope="col">7 gün içinde</th><th scope="col">30 günde tamamlanan</th><th scope="col"></th></tr></thead>
+                    <tbody>
+                    @foreach (var kisi in Model.Kullanicilar)
+                    {
+                        <tr>
+                            <td><div class="workload-person"><span class="workload-avatar">@kisi.BasHarfler</span><div><strong>@kisi.TamAd</strong><span>@kisi.Unvan · @kisi.Departman</span></div></div></td>
+                            <td><div class="workload-score"><div><span class="load-badge load-badge--@kisi.YukKodu">@kisi.YukSeviyesi</span><strong>@kisi.YukPuani puan</strong></div><div class="workload-bar" role="progressbar" aria-label="Göreli yük" aria-valuemin="0" aria-valuemax="100" aria-valuenow="@kisi.YukYuzdesi"><span class="workload-bar__fill workload-bar__fill--@kisi.YukKodu progress-width-@kisi.YukYuzdesi"></span></div></div></td>
+                            <td><strong>@kisi.AcikGorev</strong><small>@kisi.DevamEden devam · @kisi.QaBekleyen QA</small></td>
+                            <td class="@(kisi.Geciken > 0 ? "metric-danger" : string.Empty)">@kisi.Geciken</td>
+                            <td class="@(kisi.Kritik > 0 ? "metric-warning" : string.Empty)">@kisi.Kritik</td>
+                            <td>@kisi.YediGunIcinde</td>
+                            <td>@kisi.SonOtuzGundeTamamlanan</td>
+                            <td><a asp-controller="Gorev" asp-action="Index" asp-route-atanan="@kisi.KullaniciId" class="app-button app-button--secondary app-button--sm">Görevleri aç</a></td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+</div>
+

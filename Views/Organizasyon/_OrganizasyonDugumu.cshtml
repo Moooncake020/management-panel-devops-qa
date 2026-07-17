@@ -1,0 +1,26 @@
+@model OrganizasyonDugumViewModel
+
+<li class="org-tree-node"
+    data-org-search="@Model.AramaMetni"
+    data-org-department="@Model.DepartmanAdi">
+
+    @if (Model.Astlar.Any())
+    {
+        <details class="org-branch" open>
+            <summary class="org-branch-summary">
+                <partial name="_OrganizasyonKisiKarti" model="Model" />
+            </summary>
+
+            <ul class="org-children">
+                @foreach (var altDugum in Model.Astlar)
+                {
+                    <partial name="_OrganizasyonDugumu" model="altDugum" />
+                }
+            </ul>
+        </details>
+    }
+    else
+    {
+        <partial name="_OrganizasyonKisiKarti" model="Model" />
+    }
+</li>

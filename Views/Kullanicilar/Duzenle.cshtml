@@ -1,0 +1,213 @@
+@model KullaniciDuzenleViewModel
+
+@{
+    ViewData["Title"] = "Kullanıcı Düzenle";
+    var basHarf = string.IsNullOrWhiteSpace(Model.Ad) ? "?" : Model.Ad.Trim()[0].ToString().ToUpperInvariant();
+}
+
+<div id="userEditPage" class="page-stack user-edit-page">
+    <section class="app-surface page-heading user-edit-heading">
+        <div class="page-heading__content">
+            <div class="user-edit-avatar" aria-hidden="true">@basHarf</div>
+            <div class="min-w-0">
+                <div class="page-eyebrow">Kullanıcı yönetimi</div>
+                <h1 class="page-title">@Model.TamAd</h1>
+                <p class="page-description">Kimlik, organizasyon, güvenlik ve erişim bilgilerini kontrollü biçimde güncelleyin.</p>
+                <div class="user-edit-heading__badges">
+                    <span class="status-pill @(Model.AktifMi ? "status-pill--success" : "status-pill--danger")"><span aria-hidden="true"></span>@(Model.AktifMi ? "Aktif" : "Pasif")</span>
+                    <span class="status-pill @(Model.Role == "Admin" ? "status-pill--admin" : "")">@(Model.Role == "Admin" ? "Admin" : "Kullanıcı")</span>
+                    @if (Model.KendiHesabiMi)
+                    {
+                        <span class="status-pill">Aktif oturumunuz</span>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="page-heading__actions">
+            <a asp-controller="Profil" asp-action="Index" asp-route-id="@Model.Id" class="app-button app-button--secondary">Profili görüntüle</a>
+            <a asp-controller="Kullanicilar" asp-action="Index" class="app-button app-button--tertiary">Listeye dön</a>
+        </div>
+    </section>
+
+    @if (Model.HesapKilitliMi)
+    {
+        <section class="user-security-notice user-security-notice--warning" aria-labelledby="locked-title">
+            <div class="user-security-notice__content">
+                <div class="user-security-notice__icon" aria-hidden="true"><svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4" /></svg></div>
+                <div><h2 id="locked-title">Hesap geçici olarak kilitli</h2><p>@Model.BasarisizGirisSayisi başarısız giriş kaydı bulunuyor. Kilit bitişi: @(Model.KilitBitisTarihi?.ToLocalTime().ToString("dd.MM.yyyy HH:mm") ?? "Bilinmiyor")</p></div>
+            </div>
+            <form asp-controller="Kullanicilar" asp-action="KilidiAc" asp-route-id="@Model.Id" method="post"><button type="submit" class="app-button app-button--secondary">Kilidi aç</button></form>
+        </section>
+    }
+
+    <div class="user-edit-layout">
+        <aside class="user-edit-nav" aria-label="Düzenleme bölümleri">
+            <div class="app-surface user-edit-nav__panel">
+                <div class="user-edit-nav__title">Form bölümleri</div>
+                <nav>
+                    <a href="#identitySection" data-section-link="identitySection" class="is-active"><span>1</span><div><strong>Kimlik bilgileri</strong><small>Ad, soyad ve e-posta</small></div></a>
+                    <a href="#organizationSection" data-section-link="organizationSection"><span>2</span><div><strong>Organizasyon</strong><small>Departman, unvan ve yönetici</small></div></a>
+                    <a href="#securitySection" data-section-link="securitySection"><span>3</span><div><strong>Şifre ve güvenlik</strong><small>İsteğe bağlı şifre yenileme</small></div></a>
+                    <a href="#accessSection" data-section-link="accessSection"><span>4</span><div><strong>Yetki ve durum</strong><small>Sistem rolü ve aktiflik</small></div></a>
+                </nav>
+                <div class="user-edit-nav__help"><strong>Güvenlik notu</strong><p>E-posta, rol, aktiflik veya şifre değişiklikleri kullanıcının mevcut oturumlarını geçersiz kılabilir.</p></div>
+            </div>
+        </aside>
+
+        <form asp-action="Duzenle" method="post" class="user-edit-form" data-user-edit-form novalidate>
+            <input asp-for="Id" type="hidden" />
+
+            <div asp-validation-summary="ModelOnly" class="validation-summary-errors app-alert app-alert--danger" role="alert"></div>
+
+            <section id="identitySection" class="app-surface user-edit-section" data-edit-section>
+                <header class="user-edit-section__header">
+                    <div class="user-edit-section__number">1</div>
+                    <div><h2>Kimlik bilgileri</h2><p>Kullanıcının görünen adı ve sisteme girişte kullandığı e-posta adresi.</p></div>
+                </header>
+                <div class="user-edit-fields user-edit-fields--two">
+                    <div class="app-field">
+                        <label asp-for="Ad" class="app-label">Ad <span class="required-mark" aria-hidden="true">*</span></label>
+                        <input asp-for="Ad" autocomplete="given-name" class="app-input" />
+                        <span asp-validation-for="Ad" class="field-error"></span>
+                    </div>
+                    <div class="app-field">
+                        <label asp-for="Soyad" class="app-label">Soyad <span class="required-mark" aria-hidden="true">*</span></label>
+                        <input asp-for="Soyad" autocomplete="family-name" class="app-input" />
+                        <span asp-validation-for="Soyad" class="field-error"></span>
+                    </div>
+                    <div class="app-field user-edit-fields__full">
+                        <label asp-for="Email" class="app-label">E-posta adresi <span class="required-mark" aria-hidden="true">*</span></label>
+                        <input asp-for="Email" type="email" autocomplete="email" class="app-input" aria-describedby="emailHelp" />
+                        <p id="emailHelp" class="field-help">E-posta değiştirilirse kullanıcının mevcut oturumları güvenlik amacıyla sonlandırılır.</p>
+                        <span asp-validation-for="Email" class="field-error"></span>
+                    </div>
+                </div>
+            </section>
+
+            <section id="organizationSection" class="app-surface user-edit-section" data-edit-section>
+                <header class="user-edit-section__header">
+                    <div class="user-edit-section__number">2</div>
+                    <div><h2>Organizasyon bilgileri</h2><p>Kullanıcının hiyerarşideki konumunu ve görev verme ilişkilerini belirler.</p></div>
+                </header>
+                <div class="user-edit-fields user-edit-fields--two">
+                    <div class="app-field">
+                        <label asp-for="DepartmanId" class="app-label"></label>
+                        <select asp-for="DepartmanId" class="app-select">
+                            <option value="">Departman seçilmedi</option>
+                            @foreach (var departman in Model.Secenekler.Departmanlar)
+                            {
+                                <option value="@departman.Id">@departman.Ad</option>
+                            }
+                        </select>
+                        <span asp-validation-for="DepartmanId" class="field-error"></span>
+                    </div>
+                    <div class="app-field">
+                        <label asp-for="UnvanId" class="app-label"></label>
+                        <select asp-for="UnvanId" class="app-select">
+                            <option value="">Unvan seçilmedi</option>
+                            @foreach (var unvan in Model.Secenekler.Unvanlar)
+                            {
+                                <option value="@unvan.Id">@unvan.Ad</option>
+                            }
+                        </select>
+                        <span asp-validation-for="UnvanId" class="field-error"></span>
+                    </div>
+                    <div class="app-field">
+                        <label asp-for="KidemSeviyesi" class="app-label"></label>
+                        <select asp-for="KidemSeviyesi" class="app-select">
+                            @foreach (var kidem in Model.Secenekler.KidemSeviyeleri)
+                            {
+                                <option value="@((int)kidem)">@(kidem == KidemSeviyesi.MidLevel ? "Mid-Level" : kidem.ToString())</option>
+                            }
+                        </select>
+                        <span asp-validation-for="KidemSeviyesi" class="field-error"></span>
+                    </div>
+                    <div class="app-field">
+                        <label asp-for="OrganizasyonRolu" class="app-label"></label>
+                        <select asp-for="OrganizasyonRolu" class="app-select">
+                            @foreach (var rol in Model.Secenekler.OrganizasyonRolleri)
+                            {
+                                var rolAdi = rol switch { OrganizasyonRolu.Calisan => "Çalışan", OrganizasyonRolu.TakimLideri => "Takım Lideri", OrganizasyonRolu.DepartmanMuduru => "Departman Müdürü", OrganizasyonRolu.Direktor => "Direktör", OrganizasyonRolu.GenelMudur => "Genel Müdür", _ => rol.ToString() };
+                                <option value="@((int)rol)">@rolAdi</option>
+                            }
+                        </select>
+                        <span asp-validation-for="OrganizasyonRolu" class="field-error"></span>
+                    </div>
+                    <div class="app-field user-edit-fields__full">
+                        <label asp-for="YoneticiId" class="app-label"></label>
+                        <select asp-for="YoneticiId" class="app-select">
+                            <option value="">Yönetici atanmamış</option>
+                            @foreach (var yonetici in Model.Secenekler.Yoneticiler)
+                            {
+                                <option value="@yonetici.Id">@yonetici.TamAd</option>
+                            }
+                        </select>
+                        <p class="field-help">Yanlış yönetici seçimi görev görünürlüğünü ve hiyerarşik yetkileri etkileyebilir.</p>
+                        <span asp-validation-for="YoneticiId" class="field-error"></span>
+                    </div>
+                </div>
+            </section>
+
+            <section id="securitySection" class="app-surface user-edit-section" data-edit-section>
+                <header class="user-edit-section__header">
+                    <div class="user-edit-section__number">3</div>
+                    <div><h2>Şifre ve güvenlik</h2><p>Şifreyi korumak için alanları boş bırakın; yalnızca sıfırlamak gerektiğinde doldurun.</p></div>
+                </header>
+                <div class="user-edit-fields user-edit-fields--two">
+                    <div class="app-field">
+                        <label asp-for="YeniPassword" class="app-label"></label>
+                        <div class="password-field"><input asp-for="YeniPassword" class="app-input" autocomplete="new-password" aria-describedby="passwordHelp" /><button type="button" data-password-toggle="YeniPassword" aria-label="Şifreyi göster"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm7.5 0C21.1 7.9 17.1 5 12 5S2.9 7.9 1.5 12c1.4 4.1 5.4 7 10.5 7s9.1-2.9 10.5-7z" /></svg></button></div>
+                        <span asp-validation-for="YeniPassword" class="field-error"></span>
+                    </div>
+                    <div class="app-field">
+                        <label asp-for="YeniPasswordTekrar" class="app-label"></label>
+                        <div class="password-field"><input asp-for="YeniPasswordTekrar" class="app-input" autocomplete="new-password" /><button type="button" data-password-toggle="YeniPasswordTekrar" aria-label="Şifreyi göster"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm7.5 0C21.1 7.9 17.1 5 12 5S2.9 7.9 1.5 12c1.4 4.1 5.4 7 10.5 7s9.1-2.9 10.5-7z" /></svg></button></div>
+                        <span asp-validation-for="YeniPasswordTekrar" class="field-error"></span>
+                    </div>
+                    <div id="passwordHelp" class="user-password-rules user-edit-fields__full">
+                        <strong>Güçlü şifre gereksinimleri</strong>
+                        <ul><li>En az 8 karakter</li><li>Büyük ve küçük harf</li><li>En az bir rakam</li><li>En az bir özel karakter</li></ul>
+                    </div>
+                </div>
+            </section>
+
+            <section id="accessSection" class="app-surface user-edit-section" data-edit-section>
+                <header class="user-edit-section__header">
+                    <div class="user-edit-section__number">4</div>
+                    <div><h2>Yetki ve hesap durumu</h2><p>Sistem yöneticisi erişimini ve kullanıcının oturum açabilmesini belirler.</p></div>
+                </header>
+                <div class="user-edit-fields user-edit-fields--two">
+                    <div class="app-field">
+                        <label asp-for="Role" class="app-label"></label>
+                        <select asp-for="Role" class="app-select"><option value="Kullanici">Kullanıcı</option><option value="Admin">Admin</option></select>
+                        <p class="field-help field-help--warning">Admin rolü; kullanıcı, organizasyon ve tüm görev kayıtlarına geniş erişim sağlar.</p>
+                        <span asp-validation-for="Role" class="field-error"></span>
+                    </div>
+                    <div class="app-field">
+                        <label asp-for="AktifMi" class="app-label"></label>
+                        @if (Model.KendiHesabiMi)
+                        {
+                            <input asp-for="AktifMi" type="hidden" />
+                            <div class="user-readonly-state"><span aria-hidden="true"></span><div><strong>Aktif</strong><small>Kendi hesabınızı bu ekrandan pasifleştiremezsiniz.</small></div></div>
+                        }
+                        else
+                        {
+                            <select asp-for="AktifMi" class="app-select"><option value="true">Aktif — oturum açabilir</option><option value="false">Pasif — erişim engellenir</option></select>
+                        }
+                        <span asp-validation-for="AktifMi" class="field-error"></span>
+                    </div>
+                </div>
+            </section>
+
+            <div class="user-edit-actions">
+                <div class="user-edit-actions__state" aria-live="polite"><span data-save-state>Kaydedilmemiş değişiklik yok</span></div>
+                <div class="user-edit-actions__buttons"><a asp-controller="Kullanicilar" asp-action="Index" class="app-button app-button--tertiary">İptal</a><button type="submit" class="app-button app-button--primary app-button--lg"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg><span data-submit-text>Değişiklikleri kaydet</span></button></div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/pages/kullanici-duzenle.js" asp-append-version="true" defer></script>
+}

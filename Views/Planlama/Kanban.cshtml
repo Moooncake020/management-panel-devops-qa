@@ -1,0 +1,153 @@
+@model YonetimPaneli.ViewModels.Planlama.KanbanIndexViewModel
+@{
+    ViewData["Title"] = "Kanban";
+}
+
+<div class="page-stack planning-page">
+    <section class="app-surface page-heading">
+        <div class="page-heading__content">
+            <span class="page-heading__icon" aria-hidden="true">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5h4v14H4V5zm6 0h4v9h-4V5zm6 0h4v11h-4V5z" /></svg>
+            </span>
+            <div class="min-w-0">
+                <div class="page-eyebrow">Planlama merkezi</div>
+                <h1 class="page-title">Kanban iş akışı</h1>
+                <p class="page-description">Görevleri mevcut durumlarına göre izleyin, izin verilen geçişlerde sürükleyerek veya kart menüsünden ilerletin.</p>
+            </div>
+        </div>
+        <div class="page-heading__actions">
+            <a asp-controller="Gorev" asp-action="Ekle" class="app-button app-button--primary">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                Yeni görev
+            </a>
+            <a asp-controller="Gorev" asp-action="Index" class="app-button app-button--secondary">Liste görünümü</a>
+        </div>
+    </section>
+
+    <partial name="_PlanlamaSekmeleri" />
+
+    @if (Model.LimitAsildiMi)
+    {
+        <div class="app-alert flex items-start gap-3 border border-amber-200 bg-amber-50 p-4 text-amber-900" role="status">
+            <span class="app-alert__icon">!</span>
+            <div><strong>Görev sınırı uygulandı.</strong> Performansı korumak için ilk @Model.GorevLimiti görev gösteriliyor. Arama veya filtrelerle kapsamı daraltın.</div>
+        </div>
+    }
+
+    <section class="planning-summary-grid" aria-label="Kanban özeti">
+        <div class="planning-summary-card"><span>Görüntülenen</span><strong>@Model.ToplamGorev</strong><small>filtre kapsamındaki görev</small></div>
+        <div class="planning-summary-card is-danger"><span>Geciken</span><strong>@Model.GecikenGorev</strong><small>son tarihi geçmiş aktif iş</small></div>
+        <div class="planning-summary-card is-warning"><span>Kritik</span><strong>@Model.KritikGorev</strong><small>öncelikli müdahale gereken</small></div>
+        <div class="planning-summary-card is-primary"><span>Aktif kolon</span><strong>@Model.Kolonlar.Count</strong><small>iş akışı aşaması</small></div>
+    </section>
+
+    <section class="app-surface planning-filter-panel">
+        <form method="get" asp-action="Kanban" class="planning-filter-form">
+            <div class="app-field planning-filter-search">
+                <label class="app-label" for="kanbanArama">Görev ara</label>
+                <input id="kanbanArama" name="arama" value="@Model.Arama" class="app-input w-full border border-slate-200 px-3" type="search" maxlength="80" placeholder="Başlık, açıklama veya çalışan..." />
+            </div>
+            <div class="app-field">
+                <label class="app-label" for="kanbanKapsam">Kapsam</label>
+                <select id="kanbanKapsam" name="kapsam" class="app-select w-full border border-slate-200 px-3">
+                    <option value="all" selected="@(Model.Kapsam == "all")">Tüm görünür görevler</option>
+                    <option value="bana-atanan" selected="@(Model.Kapsam == "bana-atanan")">Bana atananlar</option>
+                    <option value="benim-olusturduklarim" selected="@(Model.Kapsam == "benim-olusturduklarim")">Oluşturduklarım</option>
+                    <option value="ekip" selected="@(Model.Kapsam == "ekip")">Ekip görevleri</option>
+                </select>
+            </div>
+            <div class="app-field">
+                <label class="app-label" for="kanbanAtanan">Atanan kişi</label>
+                <select id="kanbanAtanan" name="atanan" class="app-select w-full border border-slate-200 px-3">
+                    <option value="all" selected="@(Model.Atanan == "all")">Tüm çalışanlar</option>
+                    <option value="atanmamis" selected="@(Model.Atanan == "atanmamis")">Atanmamış görevler</option>
+                    @foreach (var secenek in Model.AtananKisiSecenekleri)
+                    {
+                        <option value="@secenek.Deger" selected="@(Model.Atanan == secenek.Deger)">@secenek.Metin</option>
+                    }
+                </select>
+            </div>
+            <label class="planning-check-field">
+                <input type="checkbox" name="tamamlanan" value="true" checked="@Model.TamamlananlariGoster" />
+                <span>Tamamlananları göster</span>
+            </label>
+            <div class="planning-filter-actions">
+                <button type="submit" class="app-button app-button--primary">Uygula</button>
+                <a asp-action="Kanban" class="app-button app-button--tertiary">Temizle</a>
+            </div>
+        </form>
+    </section>
+
+    <form id="kanbanAntiForgeryForm" class="hidden">@Html.AntiForgeryToken()</form>
+    <div id="kanbanStatus" class="planning-live-status" role="status" aria-live="polite"></div>
+
+    <section id="kanbanBoard" class="kanban-board" data-update-url="@Url.Action("DurumGuncelle", "Planlama")" aria-label="Görev Kanban panosu">
+        @foreach (var kolon in Model.Kolonlar)
+        {
+            <article class="kanban-column" data-status="@kolon.Durum" data-status-code="@kolon.Kod">
+                <header class="kanban-column__header">
+                    <div>
+                        <div class="kanban-column__title-row">
+                            <span class="status-dot status-dot--@kolon.Kod"></span>
+                            <h2>@kolon.Durum</h2>
+                            <span class="kanban-column__count" data-column-count>@kolon.Toplam</span>
+                        </div>
+                        <p>@kolon.Aciklama</p>
+                    </div>
+                </header>
+                <div class="kanban-dropzone" data-dropzone data-status="@kolon.Durum">
+                    @foreach (var gorev in kolon.Gorevler)
+                    {
+                        <article class="kanban-card @(gorev.GeciktiMi ? "is-overdue" : string.Empty)"
+                                 data-task-id="@gorev.Id"
+                                 data-current-status="@gorev.Durum"
+                                 data-allowed-statuses="@string.Join("|", gorev.IzinliDurumlar)"
+                                 draggable="@(gorev.DurumDegistirebilirMi ? "true" : "false")">
+                            <div class="kanban-card__topline">
+                                <span class="priority-pill priority-pill--@gorev.OncelikKodu">@gorev.OncelikMetni</span>
+                                <a asp-controller="Gorev" asp-action="Detay" asp-route-id="@gorev.Id" class="kanban-card__id">#@gorev.Id</a>
+                            </div>
+                            <h3><a asp-controller="Gorev" asp-action="Detay" asp-route-id="@gorev.Id">@gorev.Baslik</a></h3>
+                            <div class="kanban-card__meta">
+                                <span class="kanban-avatar" title="@gorev.AtananKisi">@gorev.AtananBasHarfleri</span>
+                                <span class="truncate">@gorev.AtananKisi</span>
+                            </div>
+                            <div class="kanban-card__footer">
+                                <span class="due-pill @(gorev.GeciktiMi ? "is-overdue" : gorev.BugunBitiyorMu ? "is-today" : string.Empty)">
+                                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M5 11h14M5 5h14v16H5V5z" /></svg>
+                                    @gorev.KalanGunMetni
+                                </span>
+                                @if (gorev.YorumSayisi > 0)
+                                {
+                                    <span class="kanban-comment-count" title="@gorev.YorumSayisi yorum">
+                                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h8m-8 4h5M5 20l2.5-2H19V5H5v15z" /></svg>@gorev.YorumSayisi
+                                    </span>
+                                }
+                            </div>
+                            @if (gorev.DurumDegistirebilirMi)
+                            {
+                                <div class="kanban-card__status-control">
+                                    <label for="taskStatus_@gorev.Id">Durumu değiştir</label>
+                                    <select id="taskStatus_@gorev.Id" data-status-select aria-label="@gorev.Baslik görev durumunu değiştir">
+                                        @foreach (var durum in gorev.IzinliDurumlar)
+                                        {
+                                            <option value="@durum" selected="@(durum == gorev.Durum)">@durum</option>
+                                        }
+                                    </select>
+                                </div>
+                            }
+                        </article>
+                    }
+                    <div class="kanban-empty" data-empty-state hidden="@(kolon.Gorevler.Count > 0)">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M5 4h14v16H5V4z" /></svg>
+                        <span>Bu aşamada görev yok.</span>
+                    </div>
+                </div>
+            </article>
+        }
+    </section>
+</div>
+
+@section Scripts {
+    <script src="~/js/pages/planlama-kanban.js" asp-append-version="true" defer></script>
+}

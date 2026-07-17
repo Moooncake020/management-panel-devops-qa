@@ -1,0 +1,338 @@
+@model OrganizasyonYonetimViewModel
+
+@{
+    ViewData["Title"] = "Birim Yönetimi";
+    var aktifSekme = TempData["AktifYonetimSekmesi"]?.ToString() ?? "departman";
+    var departmanKullaniciSayisi = Model.Departmanlar.Sum(x => x.KullaniciSayisi);
+    var unvanKullaniciSayisi = Model.Unvanlar.Sum(x => x.KullaniciSayisi);
+    var anaDepartmanSayisi = Model.Departmanlar.Count(x => !x.UstDepartmanId.HasValue);
+}
+
+<div id="organizationManagementPage" data-initial-tab="@aktifSekme" class="page-stack">
+    <section class="app-surface page-heading" aria-labelledby="pageTitle">
+        <div class="page-heading__content">
+            <div class="page-heading__icon" aria-hidden="true">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 21V10l8-7 8 7v11M9 21v-6h6v6M4 10h16" />
+                </svg>
+            </div>
+            <div class="min-w-0">
+                <div class="page-eyebrow">Organizasyon ayarları</div>
+                <h1 id="pageTitle" class="page-title">Departman ve unvan yönetimi</h1>
+                <p class="page-description">Organizasyon kayıtlarını oluşturun, ilişkileri düzenleyin ve kullanılmayan tanımları güvenli biçimde kaldırın.</p>
+            </div>
+        </div>
+
+        <div class="page-heading__actions">
+            <a asp-controller="Organizasyon" asp-action="Index" class="app-button app-button--secondary app-button--lg">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+                Organizasyon şeması
+            </a>
+            <a asp-controller="Kullanicilar" asp-action="Index" class="app-button app-button--tertiary app-button--lg">
+                Kullanıcılara dön
+            </a>
+        </div>
+    </section>
+
+    <section class="organization-overview" aria-label="Organizasyon yönetimi özeti">
+        <article class="organization-overview__item">
+            <span>Departman</span><strong>@Model.Departmanlar.Count</strong><small>@anaDepartmanSayisi ana birim</small>
+        </article>
+        <article class="organization-overview__item">
+            <span>Unvan</span><strong>@Model.Unvanlar.Count</strong><small>Tanımlı pozisyon</small>
+        </article>
+        <article class="organization-overview__item @(Model.DepartmanaAtanmamisKullaniciSayisi > 0 ? "has-warning" : "")">
+            <span>Departmansız</span><strong>@Model.DepartmanaAtanmamisKullaniciSayisi</strong><small>@departmanKullaniciSayisi kullanıcı atanmış</small>
+        </article>
+        <article class="organization-overview__item @(Model.UnvaniAtanmamisKullaniciSayisi > 0 ? "has-warning" : "")">
+            <span>Unvansız</span><strong>@Model.UnvaniAtanmamisKullaniciSayisi</strong><small>@unvanKullaniciSayisi atama yapılmış</small>
+        </article>
+    </section>
+
+    <section class="app-surface app-surface--flush">
+        <div class="organization-tabs" role="tablist" aria-label="Birim yönetimi bölümleri">
+            <button type="button"
+                    id="departmanTab"
+                    class="organization-tab"
+                    data-management-tab="departman"
+                    role="tab"
+                    aria-controls="departmanPanel"
+                    aria-selected="false">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21h18M5 21V7l7-4 7 4v14M9 10h.01M9 14h.01M15 10h.01M15 14h.01" /></svg>
+                Departmanlar
+                <span>@Model.Departmanlar.Count</span>
+            </button>
+            <button type="button"
+                    id="unvanTab"
+                    class="organization-tab"
+                    data-management-tab="unvan"
+                    role="tab"
+                    aria-controls="unvanPanel"
+                    aria-selected="false">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.023.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
+                Unvanlar
+                <span>@Model.Unvanlar.Count</span>
+            </button>
+        </div>
+
+        <section id="departmanPanel"
+                 data-management-panel="departman"
+                 class="@(aktifSekme == "unvan" ? "" : "is-active")"
+                 role="tabpanel"
+                 aria-labelledby="departmanTab">
+            <div class="organization-panel-header">
+                <div>
+                    <h2 class="section-title">Departmanlar</h2>
+                    <p class="section-description">Üst-alt birim ilişkilerini ve departman bilgilerini yönetin.</p>
+                </div>
+                <button type="button"
+                        class="app-button app-button--primary"
+                        data-create-toggle="departmentCreatePanel"
+                        aria-controls="departmentCreatePanel"
+                        aria-expanded="false">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                    Yeni departman
+                </button>
+            </div>
+
+            <div id="departmentCreatePanel" class="organization-create-panel" hidden>
+                <div class="organization-create-panel__header">
+                    <div>
+                        <h3>Yeni departman oluştur</h3>
+                        <p>Birimi adlandırın ve gerekiyorsa üst departmanını seçin.</p>
+                    </div>
+                    <button type="button" class="app-icon-button" data-create-close="departmentCreatePanel" aria-label="Yeni departman formunu kapat">✕</button>
+                </div>
+                <form asp-controller="Organizasyon" asp-action="DepartmanEkle" method="post" class="organization-create-form" data-submit-lock>
+                    <div class="app-field">
+                        <label asp-for="YeniDepartman.Ad" class="app-label">Departman adı</label>
+                        <input name="Ad" id="YeniDepartman_Ad" maxlength="100" required placeholder="Örn. Ürün ve Teknoloji" class="app-input" />
+                    </div>
+                    <div class="app-field">
+                        <label asp-for="YeniDepartman.UstDepartmanId" class="app-label">Üst departman</label>
+                        <select name="UstDepartmanId" id="YeniDepartman_UstDepartmanId" class="app-select">
+                            <option value="">Ana departman</option>
+                            @foreach (var secenek in Model.UstDepartmanSecenekleri)
+                            {
+                                <option value="@secenek.Id">@secenek.Ad</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="app-field organization-create-form__description">
+                        <label asp-for="YeniDepartman.Aciklama" class="app-label">Açıklama</label>
+                        <textarea name="Aciklama" id="YeniDepartman_Aciklama" rows="3" maxlength="500" placeholder="Departmanın sorumluluk alanını kısaca açıklayın." class="app-input resize-y"></textarea>
+                    </div>
+                    <div class="organization-create-form__actions">
+                        <button type="button" class="app-button app-button--secondary" data-create-close="departmentCreatePanel">Vazgeç</button>
+                        <button type="submit" class="app-button app-button--primary"><span data-submit-text>Departman oluştur</span></button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="organization-list-toolbar">
+                <div class="organization-search">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 110-15 7.5 7.5 0 010 15z" /></svg>
+                    <label for="departmentManagementSearch" class="sr-only">Departman ara</label>
+                    <input id="departmentManagementSearch" type="search" placeholder="Departman adı, açıklama veya üst birim ara..." class="app-input" />
+                </div>
+                <p><strong>@Model.Departmanlar.Count</strong> departman · <strong>@Model.DepartmanaAtanmamisKullaniciSayisi</strong> atanmamış kullanıcı</p>
+            </div>
+
+            <div id="departmentManagementList" class="organization-record-list">
+                @foreach (var departman in Model.Departmanlar)
+                {
+                    var silinebilirMi = departman.KullaniciSayisi == 0 && departman.AltDepartmanSayisi == 0;
+                    <details class="organization-record management-item"
+                             data-management-search="@departman.Ad @departman.Aciklama @departman.UstDepartmanAdi">
+                        <summary>
+                            <div class="organization-record__identity">
+                                <span class="organization-record__icon">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21h18M5 21V7l7-4 7 4v14M9 10h.01M9 14h.01M15 10h.01M15 14h.01" /></svg>
+                                </span>
+                                <span class="min-w-0">
+                                    <strong>@departman.Ad</strong>
+                                    <small>@departman.UstDepartmanAdi · Seviye @departman.Seviye</small>
+                                </span>
+                            </div>
+                            <div class="organization-record__metrics">
+                                <span><strong>@departman.KullaniciSayisi</strong> kullanıcı</span>
+                                <span><strong>@departman.AltDepartmanSayisi</strong> alt birim</span>
+                                <svg class="organization-record__chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                            </div>
+                        </summary>
+                        <div class="organization-record__body">
+                            <form asp-controller="Organizasyon" asp-action="DepartmanDuzenle" method="post" class="organization-edit-form" data-submit-lock>
+                                <input type="hidden" name="Id" value="@departman.Id" />
+                                <div class="app-field">
+                                    <label class="app-label">Departman adı</label>
+                                    <input name="Ad" value="@departman.Ad" maxlength="100" required class="app-input" />
+                                </div>
+                                <div class="app-field">
+                                    <label class="app-label">Üst departman</label>
+                                    <select name="UstDepartmanId" class="app-select">
+                                        <option value="">Ana departman</option>
+                                        @foreach (var secenek in Model.UstDepartmanSecenekleri.Where(x => x.Id != departman.Id))
+                                        {
+                                            if (departman.UstDepartmanId == secenek.Id)
+                                            {
+                                                <option value="@secenek.Id" selected>@secenek.Ad</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@secenek.Id">@secenek.Ad</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                                <div class="app-field organization-edit-form__description">
+                                    <label class="app-label">Açıklama</label>
+                                    <textarea name="Aciklama" rows="3" maxlength="500" class="app-input resize-y">@departman.Aciklama</textarea>
+                                </div>
+                                <div class="organization-record__actions">
+                                    <button type="submit" class="app-button app-button--primary app-button--sm"><span data-submit-text>Değişiklikleri kaydet</span></button>
+                                </div>
+                            </form>
+                            <div class="organization-record__danger-zone">
+                                @if (silinebilirMi)
+                                {
+                                    <form asp-controller="Organizasyon"
+                                          asp-action="DepartmanSil"
+                                          asp-route-id="@departman.Id"
+                                          method="post"
+                                          data-confirm="@departman.Ad departmanı kalıcı olarak silinecek. Bu işlem geri alınamaz."
+                                          data-confirm-title="Departmanı sil"
+                                          data-confirm-action="Departmanı sil"
+                                          data-confirm-tone="danger">
+                                        <button type="submit" class="app-button app-button--tertiary app-button--sm text-red-600">Departmanı sil</button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <span class="organization-delete-note">Bağlı kullanıcı veya alt birim olduğu için silinemez.</span>
+                                }
+                            </div>
+                        </div>
+                    </details>
+                }
+            </div>
+            <div class="organization-search-empty" data-search-empty="departmentManagementList" hidden>Aramanızla eşleşen departman bulunamadı.</div>
+        </section>
+
+        <section id="unvanPanel"
+                 data-management-panel="unvan"
+                 class="@(aktifSekme == "unvan" ? "is-active" : "")"
+                 role="tabpanel"
+                 aria-labelledby="unvanTab">
+            <div class="organization-panel-header">
+                <div>
+                    <h2 class="section-title">Unvanlar</h2>
+                    <p class="section-description">Kullanıcılara atanabilecek pozisyon tanımlarını yönetin.</p>
+                </div>
+                <button type="button"
+                        class="app-button app-button--primary"
+                        data-create-toggle="titleCreatePanel"
+                        aria-controls="titleCreatePanel"
+                        aria-expanded="false">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                    Yeni unvan
+                </button>
+            </div>
+
+            <div id="titleCreatePanel" class="organization-create-panel" hidden>
+                <div class="organization-create-panel__header">
+                    <div>
+                        <h3>Yeni unvan oluştur</h3>
+                        <p>Kullanıcı profillerinde ve görev atamalarında kullanılacak pozisyonu tanımlayın.</p>
+                    </div>
+                    <button type="button" class="app-icon-button" data-create-close="titleCreatePanel" aria-label="Yeni unvan formunu kapat">✕</button>
+                </div>
+                <form asp-controller="Organizasyon" asp-action="UnvanEkle" method="post" class="organization-create-form" data-submit-lock>
+                    <div class="app-field">
+                        <label asp-for="YeniUnvan.Ad" class="app-label">Unvan adı</label>
+                        <input name="Ad" id="YeniUnvan_Ad" maxlength="100" required placeholder="Örn. Data Engineer" class="app-input" />
+                    </div>
+                    <div class="app-field organization-create-form__description">
+                        <label asp-for="YeniUnvan.Aciklama" class="app-label">Açıklama</label>
+                        <textarea name="Aciklama" id="YeniUnvan_Aciklama" rows="3" maxlength="500" placeholder="Unvanın görev alanını kısaca açıklayın." class="app-input resize-y"></textarea>
+                    </div>
+                    <div class="organization-create-form__actions">
+                        <button type="button" class="app-button app-button--secondary" data-create-close="titleCreatePanel">Vazgeç</button>
+                        <button type="submit" class="app-button app-button--primary"><span data-submit-text>Unvan oluştur</span></button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="organization-list-toolbar">
+                <div class="organization-search">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 110-15 7.5 7.5 0 010 15z" /></svg>
+                    <label for="titleManagementSearch" class="sr-only">Unvan ara</label>
+                    <input id="titleManagementSearch" type="search" placeholder="Unvan adı veya açıklama ara..." class="app-input" />
+                </div>
+                <p><strong>@Model.Unvanlar.Count</strong> unvan · <strong>@Model.UnvaniAtanmamisKullaniciSayisi</strong> atanmamış kullanıcı</p>
+            </div>
+
+            <div id="titleManagementList" class="organization-record-list organization-record-list--two-column">
+                @foreach (var unvan in Model.Unvanlar)
+                {
+                    <details class="organization-record management-item" data-management-search="@unvan.Ad @unvan.Aciklama">
+                        <summary>
+                            <div class="organization-record__identity">
+                                <span class="organization-record__icon organization-record__icon--title">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.023.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
+                                </span>
+                                <span class="min-w-0">
+                                    <strong>@unvan.Ad</strong>
+                                    <small>@(string.IsNullOrWhiteSpace(unvan.Aciklama) ? "Açıklama eklenmemiş" : unvan.Aciklama)</small>
+                                </span>
+                            </div>
+                            <div class="organization-record__metrics">
+                                <span><strong>@unvan.KullaniciSayisi</strong> kullanıcı</span>
+                                <svg class="organization-record__chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                            </div>
+                        </summary>
+                        <div class="organization-record__body">
+                            <form asp-controller="Organizasyon" asp-action="UnvanDuzenle" method="post" class="organization-edit-form organization-edit-form--title" data-submit-lock>
+                                <input type="hidden" name="Id" value="@unvan.Id" />
+                                <div class="app-field">
+                                    <label class="app-label">Unvan adı</label>
+                                    <input name="Ad" value="@unvan.Ad" maxlength="100" required class="app-input" />
+                                </div>
+                                <div class="app-field organization-edit-form__description">
+                                    <label class="app-label">Açıklama</label>
+                                    <textarea name="Aciklama" rows="3" maxlength="500" class="app-input resize-y">@unvan.Aciklama</textarea>
+                                </div>
+                                <div class="organization-record__actions">
+                                    <button type="submit" class="app-button app-button--primary app-button--sm"><span data-submit-text>Değişiklikleri kaydet</span></button>
+                                </div>
+                            </form>
+                            <div class="organization-record__danger-zone">
+                                @if (unvan.KullaniciSayisi == 0)
+                                {
+                                    <form asp-controller="Organizasyon"
+                                          asp-action="UnvanSil"
+                                          asp-route-id="@unvan.Id"
+                                          method="post"
+                                          data-confirm="@unvan.Ad unvanı kalıcı olarak silinecek. Bu işlem geri alınamaz."
+                                          data-confirm-title="Unvanı sil"
+                                          data-confirm-action="Unvanı sil"
+                                          data-confirm-tone="danger">
+                                        <button type="submit" class="app-button app-button--tertiary app-button--sm text-red-600">Unvanı sil</button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <span class="organization-delete-note">Kullanıcılara atanmış olduğu için silinemez.</span>
+                                }
+                            </div>
+                        </div>
+                    </details>
+                }
+            </div>
+            <div class="organization-search-empty" data-search-empty="titleManagementList" hidden>Aramanızla eşleşen unvan bulunamadı.</div>
+        </section>
+    </section>
+</div>
+
+@section Scripts {
+    <script src="~/js/pages/organizasyon-yonetim.js" asp-append-version="true" defer></script>
+}

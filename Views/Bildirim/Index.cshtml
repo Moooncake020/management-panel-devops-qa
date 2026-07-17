@@ -1,0 +1,336 @@
+@model BildirimIndexViewModel
+
+@{
+    ViewData["Title"] = "Bildirimler";
+    var geriDonus = Context.Request.Path.ToString() + Context.Request.QueryString.ToString();
+    var gruplar = Model.Bildirimler.GroupBy(b => b.TarihGrubu).ToList();
+
+    string RenkSinifi(string renk) => renk switch
+    {
+        "teal" => "bg-teal-50 text-teal-700",
+        "amber" => "bg-amber-50 text-amber-700",
+        "blue" => "bg-blue-50 text-blue-700",
+        "indigo" => "bg-indigo-50 text-indigo-700",
+        "red" => "bg-red-50 text-red-700",
+        "purple" => "bg-purple-50 text-purple-700",
+        _ => "bg-slate-100 text-slate-600"
+    };
+}
+
+<div class="notification-page mx-auto max-w-6xl space-y-5">
+    <section class="page-heading notification-heading">
+        <div class="page-heading__content">
+            <div class="page-heading__icon" aria-hidden="true">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0a3 3 0 11-6 0h6z" />
+                </svg>
+            </div>
+            <div>
+                <div class="page-heading__eyebrow">İletişim merkezi</div>
+                <h1>Bildirimler</h1>
+                <p>Görev atamaları, yorumlar, durum değişiklikleri ve yaklaşan tarihler tek akışta.</p>
+            </div>
+        </div>
+
+        <div class="page-heading__actions notification-heading__actions">
+            @if (Model.OkunmamisSayisi > 0)
+            {
+                <form asp-action="TumunuOkunduYap" method="post">
+                    <input type="hidden" name="geriDonus" value="@geriDonus" />
+                    <button type="submit" class="app-button app-button--primary">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        Tümünü okundu yap
+                    </button>
+                </form>
+            }
+
+            @if (Model.OkunmusSayisi > 0)
+            {
+                <form asp-action="OkunmuslariSil"
+                      method="post"
+                      data-confirm="Okunmuş tüm bildirimler kalıcı olarak silinecek. Bu işlem geri alınamaz."
+                      data-confirm-title="Okunmuş bildirimleri sil"
+                      data-confirm-action="Tümünü sil">
+                    <input type="hidden" name="geriDonus" value="@geriDonus" />
+                    <button type="submit" class="app-button app-button--secondary">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3M4 7h16" />
+                        </svg>
+                        Okunmuşları temizle
+                    </button>
+                </form>
+            }
+        </div>
+    </section>
+
+    <section class="notification-metrics" aria-label="Bildirim özeti">
+        <a asp-action="Index"
+           asp-route-tur="@Model.AktifTur"
+           asp-route-arama="@Model.Arama"
+           asp-route-sayfaBoyutu="@Model.SayfaBoyutu"
+           class="notification-metric @(Model.AktifFiltre == "tum" ? "is-active" : "")">
+            <span class="notification-metric__icon notification-metric__icon--neutral" aria-hidden="true">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+            </span>
+            <span><small>Toplam</small><strong>@Model.ToplamSayisi</strong></span>
+        </a>
+        <a asp-action="Index"
+           asp-route-filtre="okunmamis"
+           asp-route-tur="@Model.AktifTur"
+           asp-route-arama="@Model.Arama"
+           asp-route-sayfaBoyutu="@Model.SayfaBoyutu"
+           class="notification-metric notification-metric--unread @(Model.AktifFiltre == "okunmamis" ? "is-active" : "")">
+            <span class="notification-metric__icon" aria-hidden="true">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h11z" /></svg>
+            </span>
+            <span><small>Okunmamış</small><strong>@Model.OkunmamisSayisi</strong></span>
+        </a>
+        <a asp-action="Index"
+           asp-route-filtre="okunmus"
+           asp-route-tur="@Model.AktifTur"
+           asp-route-arama="@Model.Arama"
+           asp-route-sayfaBoyutu="@Model.SayfaBoyutu"
+           class="notification-metric notification-metric--read @(Model.AktifFiltre == "okunmus" ? "is-active" : "")">
+            <span class="notification-metric__icon" aria-hidden="true">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+            </span>
+            <span><small>Okunmuş</small><strong>@Model.OkunmusSayisi</strong></span>
+        </a>
+    </section>
+
+    <section class="notification-toolbar app-surface">
+        <form asp-action="Index" method="get" class="notification-filter-form">
+            <input type="hidden" name="filtre" value="@Model.AktifFiltre" />
+
+            <div class="notification-search-field">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m1.35-5.65a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <label class="sr-only" for="notificationSearch">Bildirimlerde ara</label>
+                <input id="notificationSearch"
+                       name="arama"
+                       type="search"
+                       value="@Model.Arama"
+                       maxlength="80"
+                       placeholder="Başlık veya mesaj içinde ara..."
+                       autocomplete="off" />
+                @if (!string.IsNullOrWhiteSpace(Model.Arama))
+                {
+                    <a asp-action="Index"
+                       asp-route-filtre="@Model.AktifFiltre"
+                       asp-route-tur="@Model.AktifTur"
+                       asp-route-sayfaBoyutu="@Model.SayfaBoyutu"
+                       class="notification-search-field__clear"
+                       aria-label="Aramayı temizle">×</a>
+                }
+            </div>
+
+            <div class="notification-filter-control">
+                <label for="notificationType">Bildirim türü</label>
+                <select id="notificationType" name="tur" class="app-select" data-auto-submit>
+                    @if (Model.AktifTur == "tum")
+                    {
+                        <option value="tum" selected>Tüm türler</option>
+                    }
+                    else
+                    {
+                        <option value="tum">Tüm türler</option>
+                    }
+                    @if (Model.AktifTur == "gorev")
+                    {
+                        <option value="gorev" selected>Görev hareketleri</option>
+                    }
+                    else
+                    {
+                        <option value="gorev">Görev hareketleri</option>
+                    }
+                    @if (Model.AktifTur == "yorum")
+                    {
+                        <option value="yorum" selected>Yorumlar</option>
+                    }
+                    else
+                    {
+                        <option value="yorum">Yorumlar</option>
+                    }
+                    @if (Model.AktifTur == "tarih")
+                    {
+                        <option value="tarih" selected>Tarih uyarıları</option>
+                    }
+                    else
+                    {
+                        <option value="tarih">Tarih uyarıları</option>
+                    }
+                </select>
+            </div>
+
+            <div class="notification-filter-control notification-filter-control--size">
+                <label for="notificationPageSize">Sayfa boyutu</label>
+                <select id="notificationPageSize" name="sayfaBoyutu" class="app-select" data-auto-submit>
+                    @foreach (var boyut in new[] { 10, 20, 50 })
+                    {
+                        if (Model.SayfaBoyutu == boyut)
+                        {
+                            <option value="@boyut" selected>@boyut</option>
+                        }
+                        else
+                        {
+                            <option value="@boyut">@boyut</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <button type="submit" class="app-button app-button--primary notification-search-submit">Ara</button>
+        </form>
+
+        @if (Model.AktifFiltreSayisi > 0)
+        {
+            <div class="notification-active-filters" aria-label="Aktif filtreler">
+                <span>Aktif filtreler</span>
+                @if (Model.AktifFiltre != "tum")
+                {
+                    <a asp-action="Index"
+                       asp-route-tur="@Model.AktifTur"
+                       asp-route-arama="@Model.Arama"
+                       asp-route-sayfaBoyutu="@Model.SayfaBoyutu">
+                        @(Model.AktifFiltre == "okunmamis" ? "Okunmamış" : "Okunmuş") <b aria-hidden="true">×</b>
+                    </a>
+                }
+                @if (Model.AktifTur != "tum")
+                {
+                    var turMetni = Model.AktifTur switch
+                    {
+                        "gorev" => "Görev hareketleri",
+                        "yorum" => "Yorumlar",
+                        "tarih" => "Tarih uyarıları",
+                        _ => Model.AktifTur
+                    };
+                    <a asp-action="Index"
+                       asp-route-filtre="@Model.AktifFiltre"
+                       asp-route-arama="@Model.Arama"
+                       asp-route-sayfaBoyutu="@Model.SayfaBoyutu">
+                        @turMetni <b aria-hidden="true">×</b>
+                    </a>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.Arama))
+                {
+                    <a asp-action="Index"
+                       asp-route-filtre="@Model.AktifFiltre"
+                       asp-route-tur="@Model.AktifTur"
+                       asp-route-sayfaBoyutu="@Model.SayfaBoyutu">
+                        “@Model.Arama” <b aria-hidden="true">×</b>
+                    </a>
+                }
+                <a asp-action="Index" asp-route-sayfaBoyutu="@Model.SayfaBoyutu" class="notification-active-filters__clear">Tümünü temizle</a>
+            </div>
+        }
+    </section>
+
+    <section class="notification-list app-surface" aria-live="polite">
+        @if (!Model.Bildirimler.Any())
+        {
+            <div class="notification-empty">
+                <div class="notification-empty__icon" aria-hidden="true">
+                    <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h11z" />
+                    </svg>
+                </div>
+                <h2>Bildirim bulunamadı</h2>
+                <p>@(Model.AktifFiltreSayisi > 0 ? "Seçili filtrelerle eşleşen bir bildirim yok." : "Yeni bir gelişme olduğunda bildirimler burada görünecek.")</p>
+                @if (Model.AktifFiltreSayisi > 0)
+                {
+                    <a asp-action="Index" class="app-button app-button--secondary">Filtreleri temizle</a>
+                }
+            </div>
+        }
+        else
+        {
+            @foreach (var grup in gruplar)
+            {
+                <div class="notification-group">
+                    <div class="notification-group__heading">
+                        <h2>@grup.Key</h2>
+                        <span>@grup.Count() bildirim</span>
+                    </div>
+
+                    <div class="notification-group__items">
+                        @foreach (var bildirim in grup)
+                        {
+                            <article class="notification-item @(!bildirim.OkunduMu ? "is-unread" : "")">
+                                <form asp-action="Oku" method="post" class="notification-item__open-form">
+                                    <input type="hidden" name="id" value="@bildirim.Id" />
+                                    <input type="hidden" name="hedef" value="@(string.IsNullOrWhiteSpace(bildirim.Link) ? geriDonus : bildirim.Link)" />
+                                    <button type="submit" class="notification-item__open">
+                                        <span class="notification-item__icon @RenkSinifi(bildirim.RenkKodu)">
+                                            <partial name="_BildirimIkonu" model="bildirim.IkonKodu" />
+                                        </span>
+
+                                        <span class="notification-item__body">
+                                            <span class="notification-item__title-row">
+                                                <strong>@bildirim.Baslik</strong>
+                                                @if (!bildirim.OkunduMu)
+                                                {
+                                                    <i aria-label="Okunmamış bildirim"></i>
+                                                }
+                                            </span>
+                                            <span class="notification-item__message">@bildirim.Mesaj</span>
+                                            <span class="notification-item__meta">
+                                                <span>@bildirim.KategoriMetni</span>
+                                                <span aria-hidden="true">•</span>
+                                                <time datetime="@bildirim.OlusturulmaTarihi.ToString("O")" title="@bildirim.OlusturulmaTarihi.ToString("dd.MM.yyyy HH:mm")">@bildirim.GecenSureMetni</time>
+                                            </span>
+                                        </span>
+
+                                        <span class="notification-item__open-label">
+                                            @(!string.IsNullOrWhiteSpace(bildirim.Link) ? "Aç" : (!bildirim.OkunduMu ? "Okundu yap" : "Görüntülendi"))
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                                        </span>
+                                    </button>
+                                </form>
+
+                                <details class="action-menu notification-item__menu">
+                                    <summary aria-label="Bildirim işlemleri" title="Bildirim işlemleri">
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6h.01M12 12h.01M12 18h.01" /></svg>
+                                    </summary>
+                                    <div class="action-menu__panel notification-item__menu-panel">
+                                        <form asp-action="DurumDegistir" method="post">
+                                            <input type="hidden" name="id" value="@bildirim.Id" />
+                                            <input type="hidden" name="okunduMu" value="@(!bildirim.OkunduMu ? "true" : "false")" />
+                                            <input type="hidden" name="geriDonus" value="@geriDonus" />
+                                            <button type="submit">
+                                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                                                @(!bildirim.OkunduMu ? "Okundu işaretle" : "Okunmamış işaretle")
+                                            </button>
+                                        </form>
+                                        <form asp-action="Sil"
+                                              method="post"
+                                              data-confirm="Bu bildirim kalıcı olarak silinecek."
+                                              data-confirm-title="Bildirimi sil"
+                                              data-confirm-action="Sil">
+                                            <input type="hidden" name="id" value="@bildirim.Id" />
+                                            <input type="hidden" name="geriDonus" value="@geriDonus" />
+                                            <button type="submit" class="is-danger">
+                                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.9 12.1A2 2 0 0116.1 21H7.9a2 2 0 01-2-1.9L5 7m5 4v6m4-6v6M9 7V4h6v3M4 7h16" /></svg>
+                                                Bildirimi sil
+                                            </button>
+                                        </form>
+                                    </div>
+                                </details>
+                            </article>
+                        }
+                    </div>
+                </div>
+            }
+
+            <div class="notification-pagination">
+                <partial name="_Sayfalama" model="Model.Sayfalama" />
+            </div>
+        }
+    </section>
+</div>
+
+@section Scripts {
+    <script src="~/js/pages/bildirim-index.js" asp-append-version="true" defer></script>
+}

@@ -1,0 +1,257 @@
+@model GorevDetayViewModel
+
+@{
+    ViewData["Title"] = "Görev Detayı";
+}
+
+<div class="space-y-6">
+    <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div class="border-b border-slate-200 bg-gradient-to-br from-slate-50 via-white to-teal-50/50 p-5 lg:p-7">
+            <div class="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+                <div class="min-w-0">
+                    <a asp-controller="Gorev"
+                       asp-action="Index"
+                       class="inline-flex items-center gap-2 text-sm font-bold text-slate-500 transition hover:text-teal-700">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                        Görev listesine dön
+                    </a>
+
+                    <div class="mt-5 flex flex-wrap items-center gap-3">
+                        <partial name="_GorevDurumRozeti" model="Model.Durum" />
+                        <partial name="_GorevOncelikRozeti" model="Model.Oncelik" />
+                        @if (Model.GeciktiMi)
+                        {
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-1 text-xs font-bold text-red-700 ring-1 ring-red-100">
+                                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M4.93 19h14.14a2 2 0 001.74-3L13.74 4a2 2 0 00-3.48 0L3.19 16a2 2 0 001.74 3z" />
+                                </svg>
+                                @Model.KalanGunMetni
+                            </span>
+                        }
+                        else if (Model.BugunBitiyorMu)
+                        {
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700 ring-1 ring-amber-100">
+                                Bugün bitiyor
+                            </span>
+                        }
+                        <span class="rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-500 shadow-sm ring-1 ring-slate-200">
+                            Görev #@Model.Id
+                        </span>
+                    </div>
+
+                    <h1 class="mt-4 max-w-4xl break-words text-2xl font-extrabold leading-tight tracking-tight text-slate-900 lg:text-4xl">
+                        @Model.Baslik
+                    </h1>
+
+                    <div class="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-medium text-slate-500">
+                        <span class="inline-flex items-center gap-2">
+                            <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M5 11h14M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            @Model.OlusturulmaTarihi.ToString("dd MMMM yyyy · HH:mm")
+                        </span>
+                        <span class="inline-flex items-center gap-2">
+                            <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.87 9.87 0 01-4-.8L3 20l1.3-3.1A7.22 7.22 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                            </svg>
+                            @Model.Yorumlar.Count yorum
+                        </span>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2">
+                    <button id="copyTaskLink" type="button" class="app-button app-button--secondary" aria-describedby="copyTaskLinkStatus">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                        Bağlantıyı kopyala
+                    </button>
+                    <span id="copyTaskLinkStatus" class="hidden text-xs font-bold text-emerald-600" role="status">Kopyalandı</span>
+                    @if (Model.DuzenleyebilirMi)
+                    {
+                        <a asp-controller="Gorev"
+                           asp-action="Duzenle"
+                           asp-route-id="@Model.Id"
+                           class="app-button app-button--primary">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
+                            Görevi Düzenle
+                        </a>
+                    }
+
+                    @if (Model.SilebilirMi)
+                    {
+                        <form asp-controller="Gorev"
+                              asp-action="Sil"
+                              asp-route-id="@Model.Id"
+                              method="post"
+                              data-confirm="Bu görev; yorumları ve aktivite geçmişiyle birlikte kalıcı olarak silinecek. Bu işlem geri alınamaz." data-confirm-title="Görevi kalıcı olarak sil" data-confirm-action="Kalıcı olarak sil" data-confirm-tone="danger">
+                            <button type="submit"
+                                    class="app-button app-button--danger">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />
+                                </svg>
+                                Sil
+                            </button>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    </section>
+
+    @if (Model.GeciktiMi || Model.BugunBitiyorMu)
+    {
+        <section class="rounded-2xl border px-4 py-3 @(Model.GeciktiMi ? "border-red-200 bg-red-50 text-red-700" : "border-amber-200 bg-amber-50 text-amber-700")">
+            <div class="flex items-start gap-3">
+                <svg class="mt-0.5 h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M4.93 19h14.14a2 2 0 001.74-3L13.74 4a2 2 0 00-3.48 0L3.19 16a2 2 0 001.74 3z" />
+                </svg>
+                <div>
+                    <div class="font-extrabold">@(Model.GeciktiMi ? "Görev son tarihi geçti" : "Görevin son günü bugün")</div>
+                    <p class="mt-1 text-sm leading-6">
+                        Son tarih: <strong>@Model.SonTarih?.ToString("dd MMMM yyyy")</strong> · @Model.KalanGunMetni
+                    </p>
+                </div>
+            </div>
+        </section>
+    }
+
+    <div class="grid min-w-0 grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_390px]">
+        <div class="min-w-0 space-y-6">
+            <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:p-6">
+                <div class="mb-4 flex items-center gap-2">
+                    <svg class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <h2 class="text-lg font-extrabold text-slate-800">Görev açıklaması</h2>
+                </div>
+
+                <div class="whitespace-pre-wrap break-words text-[15px] leading-7 text-slate-600">
+                    @(string.IsNullOrWhiteSpace(Model.Aciklama) ? "Bu görev için açıklama girilmemiş." : Model.Aciklama)
+                </div>
+            </section>
+
+            @if (!string.IsNullOrWhiteSpace(Model.ResimYolu))
+            {
+                <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:p-6">
+                    <div class="mb-4 flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-2">
+                            <svg class="h-5 w-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M4 8h16" />
+                            </svg>
+                            <h2 class="text-lg font-extrabold text-slate-800">Görev görseli</h2>
+                        </div>
+
+                        <a href="@Model.ResimYolu"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800">
+                            Yeni sekmede aç
+                            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 3h7m0 0v7m0-7L10 14M5 7v12h12v-5" />
+                            </svg>
+                        </a>
+                    </div>
+
+                    <a href="@Model.ResimYolu" target="_blank" rel="noopener noreferrer" class="block overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+                        <img src="@Model.ResimYolu"
+                             alt="@Model.Baslik görev görseli"
+                             width="1200"
+                             height="800"
+                             loading="lazy"
+                             decoding="async"
+                             class="max-h-[620px] w-full object-contain" />
+                    </a>
+                </section>
+            }
+
+            <partial name="_GorevYorumlar" model="Model" />
+        </div>
+
+        <aside class="min-w-0 space-y-6 xl:sticky xl:top-24 xl:self-start">
+            <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div class="mb-5 flex items-center gap-2">
+                    <svg class="h-5 w-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <h2 class="text-lg font-extrabold text-slate-800">Görev bilgileri</h2>
+                </div>
+
+                <dl class="space-y-4">
+                    <div class="rounded-2xl bg-slate-50 p-4">
+                        <dt class="text-xs font-bold uppercase tracking-wider text-slate-400">Atanan kişi</dt>
+                        <dd class="mt-1 break-words font-bold text-slate-800">
+                            @if (Model.AtananKullaniciId.HasValue)
+                            {
+                                <a asp-controller="Profil" asp-action="Index" asp-route-id="@Model.AtananKullaniciId" class="transition hover:text-teal-700">@Model.AtananKisi</a>
+                            }
+                            else
+                            {
+                                @Model.AtananKisi
+                            }
+                        </dd>
+                    </div>
+
+                    <div class="rounded-2xl bg-slate-50 p-4">
+                        <dt class="text-xs font-bold uppercase tracking-wider text-slate-400">Görevi veren</dt>
+                        <dd class="mt-1 break-words font-bold text-slate-800">
+                            @if (Model.OlusturanKullaniciId.HasValue)
+                            {
+                                <a asp-controller="Profil" asp-action="Index" asp-route-id="@Model.OlusturanKullaniciId" class="transition hover:text-teal-700">@Model.GoreviVeren</a>
+                            }
+                            else
+                            {
+                                @Model.GoreviVeren
+                            }
+                        </dd>
+                    </div>
+
+                    <div class="rounded-2xl bg-slate-50 p-4">
+                        <dt class="text-xs font-bold uppercase tracking-wider text-slate-400">Mevcut durum</dt>
+                        <dd class="mt-2"><partial name="_GorevDurumRozeti" model="Model.Durum" /></dd>
+                    </div>
+
+                    <div class="rounded-2xl bg-slate-50 p-4">
+                        <dt class="text-xs font-bold uppercase tracking-wider text-slate-400">Öncelik</dt>
+                        <dd class="mt-2"><partial name="_GorevOncelikRozeti" model="Model.Oncelik" /></dd>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                        <div class="rounded-2xl bg-slate-50 p-4">
+                            <dt class="text-xs font-bold uppercase tracking-wider text-slate-400">Başlangıç tarihi</dt>
+                            <dd class="mt-1 font-semibold text-slate-700">@(Model.BaslangicTarihi?.ToString("dd.MM.yyyy") ?? "Belirtilmedi")</dd>
+                        </div>
+
+                        <div class="rounded-2xl p-4 @(Model.GeciktiMi ? "bg-red-50" : Model.BugunBitiyorMu ? "bg-amber-50" : "bg-slate-50")">
+                            <dt class="text-xs font-bold uppercase tracking-wider @(Model.GeciktiMi ? "text-red-400" : Model.BugunBitiyorMu ? "text-amber-500" : "text-slate-400")">Son tarih</dt>
+                            <dd class="mt-1 font-bold @(Model.GeciktiMi ? "text-red-700" : Model.BugunBitiyorMu ? "text-amber-700" : "text-slate-700")">@(Model.SonTarih?.ToString("dd.MM.yyyy") ?? "Belirtilmedi")</dd>
+                            <dd class="mt-1 text-xs font-semibold @(Model.GeciktiMi ? "text-red-500" : Model.BugunBitiyorMu ? "text-amber-500" : "text-slate-400")">@Model.KalanGunMetni</dd>
+                        </div>
+                    </div>
+
+                    @if (Model.TamamlanmaTarihi.HasValue)
+                    {
+                        <div class="rounded-2xl bg-emerald-50 p-4">
+                            <dt class="text-xs font-bold uppercase tracking-wider text-emerald-500">Tamamlanma tarihi</dt>
+                            <dd class="mt-1 font-semibold text-emerald-700">@Model.TamamlanmaTarihi.Value.ToString("dd.MM.yyyy HH:mm")</dd>
+                        </div>
+                    }
+
+                    <div class="rounded-2xl bg-slate-50 p-4">
+                        <dt class="text-xs font-bold uppercase tracking-wider text-slate-400">Oluşturulma tarihi</dt>
+                        <dd class="mt-1 font-semibold text-slate-700">@Model.OlusturulmaTarihi.ToString("dd.MM.yyyy HH:mm")</dd>
+                    </div>
+                </dl>
+            </section>
+
+            <partial name="_GorevAktiviteZamanCizelgesi" model="Model.Aktiviteler" />
+        </aside>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/pages/gorev-detay.js" asp-append-version="true" defer></script>
+}

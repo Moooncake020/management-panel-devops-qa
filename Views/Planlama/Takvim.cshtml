@@ -1,0 +1,100 @@
+@model YonetimPaneli.ViewModels.Planlama.TakvimIndexViewModel
+@{
+    ViewData["Title"] = "Görev Takvimi";
+    var haftaGunleri = new[] { "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz" };
+    var etkinlikliGunler = Model.Gunler.Where(g => g.BuAyaAitMi && g.Etkinlikler.Count > 0).ToList();
+}
+
+<div class="page-stack planning-page">
+    <section class="app-surface page-heading">
+        <div class="page-heading__content">
+            <span class="page-heading__icon" aria-hidden="true"><svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M5 11h14M5 5h14v16H5V5z" /></svg></span>
+            <div><div class="page-eyebrow">Zaman planı</div><h1 class="page-title">Görev takvimi</h1><p class="page-description">Başlangıç, son tarih ve tamamlanma hareketlerini aylık görünümde birlikte izleyin.</p></div>
+        </div>
+        <div class="page-heading__actions"><a asp-controller="Gorev" asp-action="Ekle" class="app-button app-button--primary">Yeni görev</a></div>
+    </section>
+
+    <partial name="_PlanlamaSekmeleri" />
+
+    <section class="planning-summary-grid" aria-label="Takvim özeti">
+        <div class="planning-summary-card is-primary"><span>Bu ay başlayan</span><strong>@Model.BuAyBaslayan</strong><small>plan başlangıcı</small></div>
+        <div class="planning-summary-card"><span>Bu ay bitecek</span><strong>@Model.BuAyBiten</strong><small>son tarihi bulunan</small></div>
+        <div class="planning-summary-card is-success"><span>Tamamlanan</span><strong>@Model.BuAyTamamlanan</strong><small>bu ay sonuçlanan</small></div>
+        <div class="planning-summary-card is-danger"><span>Geciken</span><strong>@Model.Geciken</strong><small>halen açık riskli görev</small></div>
+    </section>
+
+    <section class="app-surface calendar-shell">
+        <header class="calendar-toolbar">
+            <div class="calendar-navigation">
+                <a asp-action="Takvim" asp-route-yil="@Model.OncekiAy.Year" asp-route-ay="@Model.OncekiAy.Month" asp-route-atanan="@Model.Atanan" class="app-icon-button" aria-label="Önceki ay" title="Önceki ay"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></a>
+                <div><div class="page-eyebrow">Aylık görünüm</div><h2 class="section-title capitalize">@Model.AyBasligi</h2></div>
+                <a asp-action="Takvim" asp-route-yil="@Model.SonrakiAy.Year" asp-route-ay="@Model.SonrakiAy.Month" asp-route-atanan="@Model.Atanan" class="app-icon-button" aria-label="Sonraki ay" title="Sonraki ay"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg></a>
+                <a asp-action="Takvim" asp-route-atanan="@Model.Atanan" class="app-button app-button--secondary app-button--sm">Bugün</a>
+            </div>
+            <form method="get" asp-action="Takvim" class="calendar-filter-form">
+                <input type="hidden" name="yil" value="@Model.Yil" />
+                <input type="hidden" name="ay" value="@Model.Ay" />
+                <label class="app-label" for="takvimAtanan">Çalışan</label>
+                <select id="takvimAtanan" name="atanan" class="app-select border border-slate-200 px-3" data-auto-submit>
+                    <option value="all" selected="@(Model.Atanan == "all")">Tüm çalışanlar</option>
+                    <option value="atanmamis" selected="@(Model.Atanan == "atanmamis")">Atanmamış görevler</option>
+                    @foreach (var secenek in Model.AtananKisiSecenekleri)
+                    {
+                        <option value="@secenek.Deger" selected="@(Model.Atanan == secenek.Deger)">@secenek.Metin</option>
+                    }
+                </select>
+            </form>
+        </header>
+
+        <div class="calendar-desktop" role="grid" aria-label="@Model.AyBasligi görev takvimi">
+            <div class="calendar-weekdays" role="row">
+                @foreach (var gunAdi in haftaGunleri) { <div role="columnheader">@gunAdi</div> }
+            </div>
+            <div class="calendar-grid">
+                @foreach (var gun in Model.Gunler)
+                {
+                    <article class="calendar-day @(!gun.BuAyaAitMi ? "is-outside" : string.Empty) @(gun.BugunMu ? "is-today" : string.Empty) @(gun.HaftaSonuMu ? "is-weekend" : string.Empty)" role="gridcell" aria-label="@gun.Tarih.ToString("dd MMMM yyyy")">
+                        <header><time datetime="@gun.Tarih.ToString("yyyy-MM-dd")">@gun.Tarih.Day</time>@if (gun.BugunMu) { <span>Bugün</span> }</header>
+                        <div class="calendar-events" data-calendar-events>
+                            @for (var i = 0; i < gun.Etkinlikler.Count; i++)
+                            {
+                                var etkinlik = gun.Etkinlikler[i];
+                                <a asp-controller="Gorev" asp-action="Detay" asp-route-id="@etkinlik.GorevId" class="calendar-event calendar-event--@etkinlik.Tur priority-edge--@etkinlik.OncelikKodu @(etkinlik.GeciktiMi ? "is-overdue" : string.Empty) @(i >= 3 ? "is-overflow" : string.Empty)" title="@etkinlik.TurMetni · @etkinlik.Baslik · @etkinlik.AtananKisi">
+                                    <span>@etkinlik.TurMetni</span><strong>@etkinlik.Baslik</strong>
+                                </a>
+                            }
+                            @if (gun.Etkinlikler.Count > 3)
+                            {
+                                <button type="button" class="calendar-more" data-calendar-more data-count="@(gun.Etkinlikler.Count - 3)">+@(gun.Etkinlikler.Count - 3) daha</button>
+                            }
+                        </div>
+                    </article>
+                }
+            </div>
+        </div>
+
+        <div class="calendar-agenda" aria-label="Aylık görev ajandası">
+            @if (etkinlikliGunler.Count == 0)
+            {
+                <div class="empty-state py-12 text-center"><h2 class="section-title">Bu ay planlanmış görev yok</h2><p class="empty-state__description">Başlangıç veya son tarih eklenen görevler burada görünür.</p></div>
+            }
+            @foreach (var gun in etkinlikliGunler)
+            {
+                <section class="agenda-day">
+                    <header><time datetime="@gun.Tarih.ToString("yyyy-MM-dd")">@gun.Tarih.ToString("dd MMMM dddd")</time>@if (gun.BugunMu) { <span>Bugün</span> }</header>
+                    <div>
+                        @foreach (var etkinlik in gun.Etkinlikler)
+                        {
+                            <a asp-controller="Gorev" asp-action="Detay" asp-route-id="@etkinlik.GorevId" class="agenda-event @(etkinlik.GeciktiMi ? "is-overdue" : string.Empty)">
+                                <span class="calendar-event-type calendar-event-type--@etkinlik.Tur">@etkinlik.TurMetni</span>
+                                <strong>@etkinlik.Baslik</strong><small>@etkinlik.AtananKisi · @etkinlik.Durum</small>
+                            </a>
+                        }
+                    </div>
+                </section>
+            }
+        </div>
+    </section>
+</div>
+
+@section Scripts { <script src="~/js/pages/planlama-takvim.js" asp-append-version="true" defer></script> }

@@ -1,0 +1,305 @@
+@model GorevIndexViewModel
+
+@{
+    ViewData["Title"] = "Görevler";
+
+    var aktifFiltreSayisi = 0;
+    if (!string.IsNullOrWhiteSpace(Model.Arama)) aktifFiltreSayisi++;
+    if (Model.Durum != "all") aktifFiltreSayisi++;
+    if (Model.Oncelik != "all") aktifFiltreSayisi++;
+    if (Model.Tarih != "all") aktifFiltreSayisi++;
+    if (Model.Kapsam != "all") aktifFiltreSayisi++;
+    if (Model.Atanan != "all") aktifFiltreSayisi++;
+    if (Model.Siralama != "newest") aktifFiltreSayisi++;
+    if (Model.SayfaBoyutu != 20) aktifFiltreSayisi++;
+
+    var filtreVarMi = aktifFiltreSayisi > 0;
+
+    string DurumEtiketi(string deger) => deger switch
+    {
+        "aktif" => "Tüm aktif görevler",
+        "acik" => "Açık",
+        "devam" => "Devam ediyor",
+        "qa" => "QA / Test",
+        "bug" => "Bug / Hata",
+        "tamamlandi" => "Tamamlandı",
+        _ => deger
+    };
+
+    string OncelikEtiketi(string deger) => deger switch
+    {
+        "dusuk" => "Düşük öncelik",
+        "normal" => "Normal öncelik",
+        "yuksek" => "Yüksek öncelik",
+        "kritik" => "Kritik öncelik",
+        _ => deger
+    };
+
+    string TarihEtiketi(string deger) => deger switch
+    {
+        "geciken" => "Geciken",
+        "bugun" => "Bugün biten",
+        "yaklasan" => "3 gün içinde",
+        "planli" => "Planlı",
+        "tarihsiz" => "Son tarihsiz",
+        "tamamlandi" => "Tamamlanan",
+        _ => deger
+    };
+
+    string KapsamEtiketi(string deger) => deger switch
+    {
+        "bana-atanan" => "Bana atanan",
+        "benim-olusturduklarim" => "Benim oluşturduklarım",
+        "ekip" => "Ekip görevleri",
+        _ => deger
+    };
+
+    string SiralamaEtiketi(string deger) => deger switch
+    {
+        "oldest" => "En eski",
+        "title-asc" => "Başlık A–Z",
+        "status" => "Duruma göre",
+        "priority" => "Önceliğe göre",
+        "due-soon" => "Son tarihi yaklaşan",
+        _ => deger
+    };
+}
+
+<div class="page-stack">
+    <section class="app-surface page-heading" aria-labelledby="pageTitle">
+        <div class="page-heading__content">
+            <div class="page-heading__icon" aria-hidden="true">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+            </div>
+            <div class="min-w-0">
+                <div class="page-eyebrow">@(Model.TumGorevleriGoruyor ? "Genel görünüm" : "Yetki kapsamınız")</div>
+                <h1 id="pageTitle" class="page-title">@(Model.TumGorevleriGoruyor ? "Tüm Görevler" : "Görevler")</h1>
+                <p class="page-description">Görevleri bulun, önceliklendirin ve teslim risklerini tek ekrandan yönetin.</p>
+            </div>
+        </div>
+
+        <div class="page-heading__actions">
+            <a asp-controller="Gorev" asp-action="Ekle" class="app-button app-button--primary app-button--lg">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Yeni görev
+            </a>
+        </div>
+    </section>
+
+    <section aria-label="Görev durum ve risk özetleri" class="task-summary-grid">
+        <a asp-action="Index" asp-route-durum="acik" asp-route-sayfaBoyutu="@Model.SayfaBoyutu" class="task-summary task-summary--open @(Model.Durum == "acik" ? "is-active" : "")">
+            <div class="task-summary__label">Açık</div><div class="task-summary__value">@Model.AcikSayisi</div>
+        </a>
+        <a asp-action="Index" asp-route-durum="devam" asp-route-sayfaBoyutu="@Model.SayfaBoyutu" class="task-summary task-summary--progress @(Model.Durum == "devam" ? "is-active" : "")">
+            <div class="task-summary__label">Devam ediyor</div><div class="task-summary__value">@Model.DevamSayisi</div>
+        </a>
+        <a asp-action="Index" asp-route-durum="qa" asp-route-sayfaBoyutu="@Model.SayfaBoyutu" class="task-summary task-summary--qa @(Model.Durum == "qa" ? "is-active" : "")">
+            <div class="task-summary__label">QA / Test</div><div class="task-summary__value">@Model.QaSayisi</div>
+        </a>
+        <a asp-action="Index" asp-route-durum="bug" asp-route-sayfaBoyutu="@Model.SayfaBoyutu" class="task-summary task-summary--bug @(Model.Durum == "bug" ? "is-active" : "")">
+            <div class="task-summary__label">Bug / Hata</div><div class="task-summary__value">@Model.BugSayisi</div>
+        </a>
+        <a asp-action="Index" asp-route-durum="tamamlandi" asp-route-sayfaBoyutu="@Model.SayfaBoyutu" class="task-summary task-summary--completed @(Model.Durum == "tamamlandi" ? "is-active" : "")">
+            <div class="task-summary__label">Tamamlandı</div><div class="task-summary__value">@Model.TamamlananSayisi</div>
+        </a>
+        <a asp-action="Index" asp-route-tarih="geciken" asp-route-sayfaBoyutu="@Model.SayfaBoyutu" class="task-summary task-summary--overdue @(Model.Tarih == "geciken" ? "is-active" : "")">
+            <div class="task-summary__label">Geciken</div><div class="task-summary__value">@Model.GecikenSayisi</div>
+        </a>
+        <a asp-action="Index" asp-route-durum="aktif" asp-route-oncelik="kritik" asp-route-sayfaBoyutu="@Model.SayfaBoyutu" class="task-summary task-summary--critical @(Model.Durum == "aktif" && Model.Oncelik == "kritik" ? "is-active" : "")">
+            <div class="task-summary__label">Kritik aktif</div><div class="task-summary__value">@Model.KritikSayisi</div>
+        </a>
+    </section>
+
+    <section class="app-surface app-surface--flush" aria-labelledby="taskListTitle">
+        <div class="task-list-header">
+            <div>
+                <h2 id="taskListTitle" class="section-title">Görev listesi</h2>
+                <p class="section-description">
+                    <strong>@Model.FiltrelenmisToplamSayisi</strong> eşleşme · yetki kapsamınızda <strong>@Model.GorulebilirToplamSayisi</strong> görev
+                </p>
+            </div>
+
+            <div class="view-switcher" role="group" aria-label="Görev görünümü">
+                <button type="button" class="view-switcher__button" data-task-view="cards" aria-pressed="false" title="Kart görünümü">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4h6v6H4V4zm10 0h6v6h-6V4zM4 14h6v6H4v-6zm10 0h6v6h-6v-6z" />
+                    </svg>
+                    <span>Kart</span>
+                </button>
+                <button type="button" class="view-switcher__button" data-task-view="table" aria-pressed="false" title="Tablo görünümü">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                    <span>Tablo</span>
+                </button>
+            </div>
+        </div>
+
+        <form asp-action="Index" method="get" id="taskFilterForm" role="search" class="task-filter-form">
+            <div class="task-toolbar">
+                <div class="task-search-box">
+                    <label asp-for="Arama" class="sr-only">Görevlerde ara</label>
+                    <svg class="task-search-box__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m1.35-5.65a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input asp-for="Arama" type="search" autocomplete="off" placeholder="Görev başlığı, açıklama veya kişi ara..." class="app-input task-search-box__input" />
+                    <button type="submit" class="app-button app-button--primary">Ara</button>
+                </div>
+
+                <button id="taskFilterToggle"
+                        type="button"
+                        class="app-button app-button--secondary"
+                        aria-controls="taskAdvancedFilters"
+                        aria-expanded="@(filtreVarMi ? "true" : "false")">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h18l-7 8v6l-4 2v-8L3 4z" />
+                    </svg>
+                    Filtreler
+                    @if (aktifFiltreSayisi > 0)
+                    {
+                        <span class="filter-count">@aktifFiltreSayisi</span>
+                    }
+                </button>
+            </div>
+
+            <div id="taskAdvancedFilters" class="filter-panel @(filtreVarMi ? "is-open" : "")" aria-hidden="@(filtreVarMi ? "false" : "true")">
+                <div class="filter-panel__header">
+                    <div>
+                        <h3 class="filter-panel__title">Gelişmiş filtreler</h3>
+                        <p class="filter-panel__description">Sonuçları durum, risk, kapsam ve sorumluya göre daraltın.</p>
+                    </div>
+                    @if (filtreVarMi)
+                    {
+                        <a asp-action="Index" class="app-button app-button--tertiary app-button--sm">Tümünü temizle</a>
+                    }
+                </div>
+
+                <div class="filter-grid">
+                    <div class="app-field">
+                        <label asp-for="Durum" class="app-label">Durum</label>
+                        <select asp-for="Durum" class="app-select">
+                            <option value="all">Tüm durumlar</option><option value="aktif">Tüm aktif görevler</option><option value="acik">Açık</option><option value="devam">Devam ediyor</option><option value="qa">QA / Test bekleyen</option><option value="bug">Bug / Hata</option><option value="tamamlandi">Tamamlandı</option>
+                        </select>
+                    </div>
+                    <div class="app-field">
+                        <label asp-for="Oncelik" class="app-label">Öncelik</label>
+                        <select asp-for="Oncelik" class="app-select"><option value="all">Tüm öncelikler</option><option value="dusuk">Düşük</option><option value="normal">Normal</option><option value="yuksek">Yüksek</option><option value="kritik">Kritik</option></select>
+                    </div>
+                    <div class="app-field">
+                        <label asp-for="Tarih" class="app-label">Tarih riski</label>
+                        <select asp-for="Tarih" class="app-select"><option value="all">Tüm tarih durumları</option><option value="geciken">Gecikenler</option><option value="bugun">Bugün bitenler</option><option value="yaklasan">3 gün içinde bitecekler</option><option value="planli">Daha sonra bitecekler</option><option value="tarihsiz">Son tarihi olmayanlar</option><option value="tamamlandi">Tamamlananlar</option></select>
+                    </div>
+                    <div class="app-field">
+                        <label asp-for="Kapsam" class="app-label">Kapsam</label>
+                        <select asp-for="Kapsam" class="app-select"><option value="all">Tüm görevler</option><option value="bana-atanan">Bana atananlar</option><option value="benim-olusturduklarim">Benim oluşturduklarım</option><option value="ekip">Ekip / diğer görevler</option></select>
+                    </div>
+                    <div class="app-field">
+                        <label asp-for="Atanan" class="app-label">Atanan kişi</label>
+                        <select asp-for="Atanan" class="app-select">
+                            <option value="all">Tüm kullanıcılar</option>
+                            @foreach (var secenek in Model.AtananKisiSecenekleri)
+                            {
+                                <option value="@secenek.Deger">@secenek.Metin</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="app-field">
+                        <label asp-for="Siralama" class="app-label">Sıralama</label>
+                        <select asp-for="Siralama" class="app-select"><option value="newest">En yeni</option><option value="oldest">En eski</option><option value="title-asc">Başlık A–Z</option><option value="status">Duruma göre</option><option value="priority">Önceliğe göre</option><option value="due-soon">Son tarihi yaklaşan</option></select>
+                    </div>
+                    <div class="app-field">
+                        <label asp-for="SayfaBoyutu" class="app-label">Sayfa boyutu</label>
+                        <select asp-for="SayfaBoyutu" class="app-select"><option value="10">10 kayıt</option><option value="20">20 kayıt</option><option value="50">50 kayıt</option></select>
+                    </div>
+                </div>
+
+                <div class="filter-panel__actions">
+                    <button type="submit" class="app-button app-button--primary">Filtreleri uygula</button>
+                    <button type="button" class="app-button app-button--tertiary" data-filter-panel-close>Paneli kapat</button>
+                </div>
+            </div>
+        </form>
+
+        @if (filtreVarMi)
+        {
+            <div class="active-filters" aria-label="Aktif filtreler">
+                <span class="active-filters__label">Aktif filtreler:</span>
+                @if (!string.IsNullOrWhiteSpace(Model.Arama))
+                {
+                    <button type="button" class="filter-chip" data-filter-clear="Arama"><span>Arama: @Model.Arama</span><span aria-hidden="true">×</span></button>
+                }
+                @if (Model.Durum != "all")
+                {
+                    <button type="button" class="filter-chip" data-filter-clear="Durum"><span>@DurumEtiketi(Model.Durum)</span><span aria-hidden="true">×</span></button>
+                }
+                @if (Model.Oncelik != "all")
+                {
+                    <button type="button" class="filter-chip" data-filter-clear="Oncelik"><span>@OncelikEtiketi(Model.Oncelik)</span><span aria-hidden="true">×</span></button>
+                }
+                @if (Model.Tarih != "all")
+                {
+                    <button type="button" class="filter-chip" data-filter-clear="Tarih"><span>@TarihEtiketi(Model.Tarih)</span><span aria-hidden="true">×</span></button>
+                }
+                @if (Model.Kapsam != "all")
+                {
+                    <button type="button" class="filter-chip" data-filter-clear="Kapsam"><span>@KapsamEtiketi(Model.Kapsam)</span><span aria-hidden="true">×</span></button>
+                }
+                @if (Model.Atanan != "all")
+                {
+                    var atananEtiketi = Model.AtananKisiSecenekleri.FirstOrDefault(x => x.Deger == Model.Atanan)?.Metin ?? "Atanan kişi";
+                    <button type="button" class="filter-chip" data-filter-clear="Atanan"><span>@atananEtiketi</span><span aria-hidden="true">×</span></button>
+                }
+                @if (Model.Siralama != "newest")
+                {
+                    <button type="button" class="filter-chip" data-filter-clear="Siralama"><span>@SiralamaEtiketi(Model.Siralama)</span><span aria-hidden="true">×</span></button>
+                }
+                @if (Model.SayfaBoyutu != 20)
+                {
+                    <button type="button" class="filter-chip" data-filter-clear="SayfaBoyutu"><span>@Model.SayfaBoyutu kayıt</span><span aria-hidden="true">×</span></button>
+                }
+            </div>
+        }
+
+        <div id="taskResults" class="task-results">
+            @if (!Model.Gorevler.Any())
+            {
+                <div class="empty-state">
+                    <div class="empty-state__icon" aria-hidden="true">⌕</div>
+                    <h3 class="empty-state__title">Eşleşen görev bulunamadı</h3>
+                    <p class="empty-state__description">Filtreleri değiştirin veya yeni bir görev oluşturun.</p>
+                    <div class="empty-state__actions">
+                        @if (filtreVarMi)
+                        {
+                            <a asp-action="Index" class="app-button app-button--secondary">Filtreleri temizle</a>
+                        }
+                        <a asp-action="Ekle" class="app-button app-button--primary">Yeni görev</a>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <partial name="_GorevKartlari" model="Model" />
+                <partial name="_GorevTablosu" model="Model" />
+                <partial name="_Sayfalama" model="Model.Sayfalama" />
+            }
+        </div>
+    </section>
+</div>
+
+<div id="taskImageModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-950/90 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="taskImageModalTitle" aria-hidden="true">
+    <div class="relative flex max-h-[92vh] w-full max-w-5xl flex-col items-center">
+        <div class="mb-3 flex w-full items-center justify-between gap-4 text-white">
+            <h2 id="taskImageModalTitle" class="truncate text-sm font-semibold">Görev görseli</h2>
+            <button id="taskImageModalClose" type="button" class="app-icon-button app-icon-button--inverse" aria-label="Görsel penceresini kapat">✕</button>
+        </div>
+        <img id="taskImageModalImage" alt="" class="max-h-[82vh] max-w-full rounded-2xl border border-white/10 object-contain shadow-2xl" />
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/pages/gorev-index.js" asp-append-version="true" defer></script>
+}

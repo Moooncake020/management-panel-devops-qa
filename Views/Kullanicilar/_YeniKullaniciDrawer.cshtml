@@ -1,0 +1,267 @@
+@model KullaniciEkleViewModel
+
+<div id="newUserDrawer"
+     class="drawer-root"
+     aria-hidden="true">
+
+    <button type="button"
+            class="drawer-backdrop"
+            data-drawer-close
+            aria-label="Yeni kullanıcı formunu kapat">
+    </button>
+
+    <section class="drawer-panel"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="newUserDrawerTitle">
+
+        <div class="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-200 bg-white/95 px-5 py-5 backdrop-blur sm:px-7">
+            <div>
+                <div class="mb-2 inline-flex items-center gap-2 rounded-full bg-teal-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-teal-700">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3M12 7a4 4 0 11-8 0 4 4 0 018 0zM4 21a8 8 0 0116 0" />
+                    </svg>
+                    Yeni Kayıt
+                </div>
+
+                <h2 id="newUserDrawerTitle" class="text-xl font-extrabold text-slate-800 sm:text-2xl">
+                    Yeni kullanıcı oluştur
+                </h2>
+
+                <p class="mt-1 text-sm leading-6 text-slate-500">
+                    Zorunlu alanları doldurun. Hatalı alanlar form kapatılmadan aynı ekranda gösterilir.
+                </p>
+            </div>
+
+            <button type="button"
+                    data-drawer-close
+                    class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
+                    aria-label="Yeni kullanıcı formunu kapat">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <form asp-controller="Kullanicilar"
+              asp-action="Ekle"
+              method="post"
+              data-submit-lock
+              class="space-y-7 px-5 py-6 sm:px-7">
+
+            <div asp-validation-summary="ModelOnly"
+                 class="validation-summary-errors rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+                 role="alert">
+            </div>
+
+            <fieldset>
+                <legend class="mb-4 flex items-center gap-2 text-sm font-extrabold text-slate-700">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A7 7 0 0112 15a7 7 0 016.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                    </span>
+                    Kişisel Bilgiler
+                </legend>
+
+                <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                    <div>
+                        <label asp-for="Ad" class="mb-2 block text-sm font-bold text-slate-700">
+                            Ad <span class="text-red-500">*</span>
+                        </label>
+                        <input asp-for="Ad"
+                               id="newUserFirstName"
+                               autocomplete="given-name"
+                               placeholder="Örn. Kemal"
+                               class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-700 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                        <span asp-validation-for="Ad" class="mt-1.5 block text-xs font-semibold text-red-600"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="Soyad" class="mb-2 block text-sm font-bold text-slate-700">
+                            Soyad <span class="text-red-500">*</span>
+                        </label>
+                        <input asp-for="Soyad"
+                               autocomplete="family-name"
+                               placeholder="Örn. Kapak"
+                               class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-700 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                        <span asp-validation-for="Soyad" class="mt-1.5 block text-xs font-semibold text-red-600"></span>
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label asp-for="Email" class="mb-2 block text-sm font-bold text-slate-700">
+                            E-posta adresi <span class="text-red-500">*</span>
+                        </label>
+                        <input asp-for="Email"
+                               autocomplete="email"
+                               placeholder="ornek@sirket.com"
+                               class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-700 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                        <span asp-validation-for="Email" class="mt-1.5 block text-xs font-semibold text-red-600"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="Password" class="mb-2 block text-sm font-bold text-slate-700">
+                            Şifre <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <input asp-for="Password"
+                                   id="newUserPassword"
+                                   autocomplete="new-password"
+                                   placeholder="En az 8 karakter"
+                                   class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 pr-12 text-slate-700 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                            <button type="button"
+                                    data-password-toggle="newUserPassword"
+                                    class="absolute right-2 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl text-slate-400 transition hover:bg-white hover:text-slate-700"
+                                    aria-label="Şifreyi göster">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm6 0c-1.5 4-4.5 6-9 6s-7.5-2-9-6c1.5-4 4.5-6 9-6s7.5 2 9 6z" />
+                                </svg>
+                            </button>
+                        </div>
+                        <span asp-validation-for="Password" class="mt-1.5 block text-xs font-semibold text-red-600"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="PasswordTekrar" class="mb-2 block text-sm font-bold text-slate-700">
+                            Şifre tekrarı <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <input asp-for="PasswordTekrar"
+                                   id="newUserPasswordRepeat"
+                                   autocomplete="new-password"
+                                   placeholder="Şifreyi tekrar girin"
+                                   class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 pr-12 text-slate-700 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                            <button type="button"
+                                    data-password-toggle="newUserPasswordRepeat"
+                                    class="absolute right-2 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl text-slate-400 transition hover:bg-white hover:text-slate-700"
+                                    aria-label="Şifre tekrarını göster">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm6 0c-1.5 4-4.5 6-9 6s-7.5-2-9-6c1.5-4 4.5-6 9-6s7.5 2 9 6z" />
+                                </svg>
+                            </button>
+                        </div>
+                        <span asp-validation-for="PasswordTekrar" class="mt-1.5 block text-xs font-semibold text-red-600"></span>
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset class="border-t border-slate-200 pt-6">
+                <legend class="mb-4 flex items-center gap-2 text-sm font-extrabold text-slate-700">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M5 7v12h14V7M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2" />
+                        </svg>
+                    </span>
+                    Organizasyon Bilgileri
+                </legend>
+
+                <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                    <div>
+                        <label asp-for="DepartmanId" class="mb-2 block text-sm font-bold text-slate-700"></label>
+                        <select asp-for="DepartmanId"
+                                class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500">
+                            <option value="">Departman seçiniz</option>
+                            @foreach (var departman in Model.Secenekler.Departmanlar)
+                            {
+                                <option value="@departman.Id">@departman.Ad</option>
+                            }
+                        </select>
+                        <span asp-validation-for="DepartmanId" class="mt-1.5 block text-xs font-semibold text-red-600"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="UnvanId" class="mb-2 block text-sm font-bold text-slate-700"></label>
+                        <select asp-for="UnvanId"
+                                class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500">
+                            <option value="">Unvan seçiniz</option>
+                            @foreach (var unvan in Model.Secenekler.Unvanlar)
+                            {
+                                <option value="@unvan.Id">@unvan.Ad</option>
+                            }
+                        </select>
+                        <span asp-validation-for="UnvanId" class="mt-1.5 block text-xs font-semibold text-red-600"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="KidemSeviyesi" class="mb-2 block text-sm font-bold text-slate-700"></label>
+                        <select asp-for="KidemSeviyesi"
+                                class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500">
+                            @foreach (var kidem in Model.Secenekler.KidemSeviyeleri)
+                            {
+                                <option value="@((int)kidem)">@(kidem == KidemSeviyesi.MidLevel ? "Mid-Level" : kidem.ToString())</option>
+                            }
+                        </select>
+                        <span asp-validation-for="KidemSeviyesi" class="mt-1.5 block text-xs font-semibold text-red-600"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="OrganizasyonRolu" class="mb-2 block text-sm font-bold text-slate-700"></label>
+                        <select asp-for="OrganizasyonRolu"
+                                class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500">
+                            @foreach (var rol in Model.Secenekler.OrganizasyonRolleri)
+                            {
+                                var rolAdi = rol switch
+                                {
+                                    OrganizasyonRolu.Calisan => "Çalışan",
+                                    OrganizasyonRolu.TakimLideri => "Takım Lideri",
+                                    OrganizasyonRolu.DepartmanMuduru => "Departman Müdürü",
+                                    OrganizasyonRolu.Direktor => "Direktör",
+                                    OrganizasyonRolu.GenelMudur => "Genel Müdür",
+                                    _ => rol.ToString()
+                                };
+                                <option value="@((int)rol)">@rolAdi</option>
+                            }
+                        </select>
+                        <span asp-validation-for="OrganizasyonRolu" class="mt-1.5 block text-xs font-semibold text-red-600"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="YoneticiId" class="mb-2 block text-sm font-bold text-slate-700"></label>
+                        <select asp-for="YoneticiId"
+                                class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500">
+                            <option value="">Yönetici yok</option>
+                            @foreach (var yonetici in Model.Secenekler.Yoneticiler)
+                            {
+                                <option value="@yonetici.Id">@yonetici.TamAd</option>
+                            }
+                        </select>
+                        <span asp-validation-for="YoneticiId" class="mt-1.5 block text-xs font-semibold text-red-600"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="Role" class="mb-2 block text-sm font-bold text-slate-700"></label>
+                        <select asp-for="Role"
+                                class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500">
+                            <option value="Kullanici">Kullanıcı</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                        <span asp-validation-for="Role" class="mt-1.5 block text-xs font-semibold text-red-600"></span>
+                    </div>
+                </div>
+            </fieldset>
+
+            <div class="flex items-start gap-3 rounded-2xl border border-blue-100 bg-blue-50 p-4 text-sm leading-6 text-blue-700">
+                <svg class="mt-0.5 h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p>Yeni kullanıcı aktif oluşturulur. Aynı e-posta adresiyle ikinci bir hesap oluşturulamaz.</p>
+            </div>
+
+            <div class="sticky bottom-0 -mx-5 flex flex-col-reverse gap-3 border-t border-slate-200 bg-white/95 px-5 py-4 backdrop-blur sm:-mx-7 sm:flex-row sm:justify-end sm:px-7">
+                <button type="button"
+                        data-drawer-close
+                        class="inline-flex h-12 items-center justify-center rounded-2xl bg-slate-100 px-5 text-sm font-bold text-slate-600 transition hover:bg-slate-200">
+                    İptal
+                </button>
+
+                <button type="submit"
+                        class="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-teal-500 to-teal-600 px-6 text-sm font-bold text-white shadow-sm transition hover:from-teal-600 hover:to-teal-700 hover:shadow-md">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span data-submit-text>Kullanıcıyı oluştur</span>
+                </button>
+            </div>
+        </form>
+    </section>
+</div>

@@ -1,0 +1,35 @@
+@model GorevOnceligi
+
+@{
+    var metin = Model switch
+    {
+        GorevOnceligi.Dusuk => "Düşük",
+        GorevOnceligi.Normal => "Normal",
+        GorevOnceligi.Yuksek => "Yüksek",
+        GorevOnceligi.Kritik => "Kritik",
+        _ => "Normal"
+    };
+
+    var sinif = Model switch
+    {
+        GorevOnceligi.Dusuk => "bg-slate-100 text-slate-600 ring-slate-200",
+        GorevOnceligi.Normal => "bg-blue-50 text-blue-700 ring-blue-100",
+        GorevOnceligi.Yuksek => "bg-amber-50 text-amber-700 ring-amber-100",
+        GorevOnceligi.Kritik => "bg-red-50 text-red-700 ring-red-100",
+        _ => "bg-blue-50 text-blue-700 ring-blue-100"
+    };
+
+    var nokta = Model switch
+    {
+        GorevOnceligi.Dusuk => "bg-slate-400",
+        GorevOnceligi.Normal => "bg-blue-500",
+        GorevOnceligi.Yuksek => "bg-amber-500",
+        GorevOnceligi.Kritik => "bg-red-500",
+        _ => "bg-blue-500"
+    };
+}
+
+<span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ring-1 ring-inset @sinif">
+    <span class="h-1.5 w-1.5 rounded-full @nokta"></span>
+    @metin
+</span>

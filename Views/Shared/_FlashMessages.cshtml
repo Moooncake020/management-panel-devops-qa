@@ -1,0 +1,44 @@
+@{
+    var mesajTanimlari = new[]
+    {
+        (Anahtar: "BasariMesaji", Ton: "success", Simge: "✓", Rol: "status"),
+        (Anahtar: "HataMesaji", Ton: "danger", Simge: "!", Rol: "alert"),
+        (Anahtar: "UyariMesaji", Ton: "warning", Simge: "!", Rol: "status"),
+        (Anahtar: "BilgiMesaji", Ton: "info", Simge: "i", Rol: "status")
+    };
+
+    var mesajlar = mesajTanimlari
+        .Select(tanim => new
+        {
+            tanim.Ton,
+            tanim.Simge,
+            tanim.Rol,
+            Metin = TempData[tanim.Anahtar]?.ToString()
+        })
+        .Where(mesaj => !string.IsNullOrWhiteSpace(mesaj.Metin))
+        .ToList();
+}
+
+@if (mesajlar.Count > 0)
+{
+    <div class="app-flash-stack" aria-live="polite" aria-atomic="false">
+        @foreach (var mesaj in mesajlar)
+        {
+            <div class="app-alert app-alert--@mesaj.Ton app-flash-message"
+                 role="@mesaj.Rol"
+                 data-flash-message>
+                <span class="app-alert__icon" aria-hidden="true">@mesaj.Simge</span>
+                <span class="app-flash-message__text">@mesaj.Metin</span>
+                <button type="button"
+                        class="app-flash-message__close"
+                        data-dismiss-flash
+                        aria-label="Mesajı kapat"
+                        title="Kapat">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        }
+    </div>
+}

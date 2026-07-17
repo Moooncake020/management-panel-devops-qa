@@ -1,0 +1,52 @@
+@model YonetimPaneli.ViewModels.Planlama.RaporIndexViewModel
+@{
+    ViewData["Title"] = "Görev Raporları";
+}
+
+<div class="page-stack planning-page">
+    <section class="app-surface page-heading">
+        <div class="page-heading__content">
+            <span class="page-heading__icon" aria-hidden="true"><svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 19V9m5 10V5m5 14v-7m5 7V3" /></svg></span>
+            <div><div class="page-eyebrow">Performans görünümü</div><h1 class="page-title">Görev raporları</h1><p class="page-description">Mevcut görev portföyünü ve seçili dönemdeki üretim–tamamlama hareketlerini birlikte değerlendirin.</p></div>
+        </div>
+        <div class="report-period-switcher" aria-label="Rapor dönemi">
+            @foreach (var gun in new[] { 7, 30, 90, 180 }) { <a asp-action="Raporlar" asp-route-donem="@gun" class="@(Model.DonemGun == gun ? "is-active" : string.Empty)">@(gun == 7 ? "7 gün" : gun == 30 ? "30 gün" : gun == 90 ? "90 gün" : "6 ay")</a> }
+        </div>
+    </section>
+
+    <partial name="_PlanlamaSekmeleri" />
+
+    <section class="report-kpi-grid" aria-label="Rapor özeti">
+        <article><span>Dönemde oluşturulan</span><strong>@Model.DonemdeOlusturulan</strong><small>@Model.DonemBaslangici.ToString("dd.MM.yyyy") tarihinden beri</small></article>
+        <article class="is-success"><span>Dönemde tamamlanan</span><strong>@Model.DonemdeTamamlanan</strong><small>tamamlanma hareketi</small></article>
+        <article><span>Kohort tamamlama</span><strong>%@Model.TamamlanmaOrani</strong><small>dönemde açılan görevlerden</small></article>
+        <article class="is-danger"><span>Aktif gecikme oranı</span><strong>%@Model.GecikmeOrani</strong><small>@Model.GecikenGorev / @Model.AktifGorev aktif görev</small></article>
+        <article class="is-primary"><span>Ortalama tamamlama</span><strong>@Model.OrtalamaTamamlanmaGunu</strong><small>gün</small></article>
+    </section>
+
+    <div class="report-grid-two">
+        <section class="app-surface report-panel"><header><div><h2 class="section-title">Durum dağılımı</h2><p class="section-description">Tüm görünür görevlerin anlık durumu.</p></div><strong>@Model.GorulebilirToplam</strong></header><div class="distribution-list">@foreach (var item in Model.DurumDagilimi) { <div class="distribution-row"><div><span class="status-dot status-dot--@item.Kod"></span><strong>@item.Etiket</strong><em>@item.Deger</em></div><div class="distribution-track" role="progressbar" aria-label="@item.Etiket oranı" aria-valuemin="0" aria-valuemax="100" aria-valuenow="@item.Yuzde"><span class="distribution-fill distribution-fill--@item.Kod progress-width-@item.Yuzde"></span></div><small>%@item.Yuzde</small></div> }</div></section>
+        <section class="app-surface report-panel"><header><div><h2 class="section-title">Aktif görev öncelikleri</h2><p class="section-description">Tamamlanmamış işlerin risk seviyesi.</p></div><strong>@Model.AktifGorev</strong></header><div class="distribution-list">@foreach (var item in Model.OncelikDagilimi) { <div class="distribution-row"><div><span class="priority-dot priority-dot--@item.Kod"></span><strong>@item.Etiket</strong><em>@item.Deger</em></div><div class="distribution-track" role="progressbar" aria-label="@item.Etiket öncelik oranı" aria-valuemin="0" aria-valuemax="100" aria-valuenow="@item.Yuzde"><span class="distribution-fill priority-fill--@item.Kod progress-width-@item.Yuzde"></span></div><small>%@item.Yuzde</small></div> }</div></section>
+    </div>
+
+    <section class="app-surface report-panel report-trend-panel">
+        <header><div><h2 class="section-title">Haftalık görev hareketi</h2><p class="section-description">Oluşturulan ve tamamlanan görevlerin dönem içindeki seyri.</p></div><div class="chart-legend"><span><i class="is-created"></i>Oluşturulan</span><span><i class="is-completed"></i>Tamamlanan</span></div></header>
+        <div class="trend-chart" role="img" aria-label="Haftalık oluşturulan ve tamamlanan görev grafiği">
+            @foreach (var hafta in Model.HaftalikTrend)
+            {
+                var olusturulanYukseklik = hafta.Olusturulan == 0
+                    ? 0
+                    : Math.Max(3, (int)Math.Round(hafta.Olusturulan * 100d / Model.TrendMaksimum));
+                var tamamlananYukseklik = hafta.Tamamlanan == 0
+                    ? 0
+                    : Math.Max(3, (int)Math.Round(hafta.Tamamlanan * 100d / Model.TrendMaksimum));
+                <div class="trend-week"><div class="trend-bars"><span class="trend-bar is-created chart-height-@olusturulanYukseklik @(hafta.Olusturulan == 0 ? "is-zero" : string.Empty)" title="@hafta.Olusturulan oluşturulan"><em>@hafta.Olusturulan</em></span><span class="trend-bar is-completed chart-height-@tamamlananYukseklik @(hafta.Tamamlanan == 0 ? "is-zero" : string.Empty)" title="@hafta.Tamamlanan tamamlanan"><em>@hafta.Tamamlanan</em></span></div><small>@hafta.Etiket</small></div>
+            }
+        </div>
+    </section>
+
+    <div class="report-grid-two report-grid-two--bottom">
+        <section class="app-surface report-panel"><header><div><h2 class="section-title">Departman görünümü</h2><p class="section-description">Atanan kişinin departmanına göre ilk 10 birim.</p></div></header>@if (Model.Departmanlar.Count == 0) { <p class="empty-state__description">Departman verisi bulunamadı.</p> } else { <div class="report-table-wrap"><table class="report-table"><caption class="sr-only">Departmanlara göre görev performansı</caption><thead><tr><th scope="col">Departman</th><th scope="col">Aktif</th><th scope="col">Geciken</th><th scope="col">Kritik</th><th scope="col">Tamamlanan</th></tr></thead><tbody>@foreach (var dep in Model.Departmanlar) { <tr><td><strong>@dep.Departman</strong></td><td>@dep.AktifGorev</td><td class="@(dep.Geciken > 0 ? "metric-danger" : string.Empty)">@dep.Geciken</td><td class="@(dep.Kritik > 0 ? "metric-warning" : string.Empty)">@dep.Kritik</td><td>@dep.DonemdeTamamlanan</td></tr> }</tbody></table></div> }</section>
+        <section class="app-surface report-panel"><header><div><h2 class="section-title">Öncelikli riskler</h2><p class="section-description">Geciken veya kritik ilk görevler.</p></div><a asp-controller="Gorev" asp-action="Index" asp-route-tarih="geciken" class="app-button app-button--tertiary app-button--sm">Tümünü aç</a></header>@if (Model.RiskliGorevler.Count == 0) { <div class="report-good-state"><span>✓</span><div><strong>Aktif kritik risk yok</strong><small>Geciken veya kritik görev bulunmuyor.</small></div></div> } else { <div class="risk-task-list">@foreach (var gorev in Model.RiskliGorevler) { <a asp-controller="Gorev" asp-action="Detay" asp-route-id="@gorev.Id"><span class="priority-pill priority-pill--@gorev.OncelikKodu">@gorev.OncelikMetni</span><div><strong>@gorev.Baslik</strong><small>@gorev.AtananKisi · @gorev.KalanGunMetni</small></div><span>#@gorev.Id</span></a> }</div> }</section>
+    </div>
+</div>

@@ -1,0 +1,140 @@
+@using YonetimPaneli.Models
+@model List<Gorev>
+
+@{
+    ViewData["Title"] = "Görevleri Devret";
+
+    var kaynakKullanici = ViewBag.KaynakKullanici as AppUser;
+    var hedefKullanicilar = ViewBag.HedefKullanicilar as List<AppUser>
+        ?? new List<AppUser>();
+    var kaynakAd = kaynakKullanici?.TamAd ?? "Kullanıcı";
+}
+
+<div class="page-stack">
+    <section class="app-surface page-heading" aria-labelledby="pageTitle">
+        <div class="page-heading__content">
+            <div class="page-heading__icon page-heading__icon--warning" aria-hidden="true">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4M16 17H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+            </div>
+            <div class="min-w-0">
+                <div class="page-eyebrow">Kullanıcı işlemleri</div>
+                <h1 id="pageTitle" class="page-title">Görevleri devret</h1>
+                <p class="page-description"><strong>@kaynakAd</strong> kullanıcısındaki tamamlanmamış görevleri başka bir aktif kullanıcıya güvenli biçimde aktarın.</p>
+            </div>
+        </div>
+        <div class="page-heading__actions">
+            <a asp-controller="Profil" asp-action="Index" asp-route-id="@kaynakKullanici?.Id" class="app-button app-button--secondary">Profili görüntüle</a>
+            <a asp-controller="Kullanicilar" asp-action="Index" class="app-button app-button--tertiary">Kullanıcılara dön</a>
+        </div>
+    </section>
+
+    @if (!Model.Any())
+    {
+        <section class="empty-state" aria-labelledby="emptyTransferTitle">
+            <div class="empty-state__icon text-emerald-600" aria-hidden="true">
+                <svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+            <h2 id="emptyTransferTitle" class="mt-4 text-lg font-extrabold text-slate-800">Devredilecek görev bulunmuyor</h2>
+            <p class="mx-auto mt-2 max-w-xl text-sm leading-6 text-slate-500">Bu kullanıcının tamamlanmamış görevi olmadığı için hesap durumu doğrudan değiştirilebilir.</p>
+            <a asp-controller="Kullanicilar" asp-action="Index" class="app-button app-button--primary mt-5">Kullanıcı listesine dön</a>
+        </section>
+    }
+    else
+    {
+        <form asp-controller="Kullanicilar"
+              asp-action="GorevleriDevret"
+              method="post"
+              class="page-stack"
+              data-confirm="@Model.Count tamamlanmamış görev seçtiğiniz kullanıcıya devredilecek. Atama değişikliğini onaylıyor musunuz?"
+              data-confirm-title="Görev devrini onaylayın"
+              data-confirm-action="Görevleri devret"
+              data-confirm-tone="primary">
+            <input type="hidden" name="kaynakKullaniciId" value="@kaynakKullanici?.Id" />
+
+            <section class="app-surface p-5 lg:p-6" aria-labelledby="transferTargetTitle">
+                <div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,0.75fr)] lg:items-end">
+                    <div>
+                        <div class="app-alert app-alert--warning" role="status">
+                            <span class="app-alert__icon" aria-hidden="true">!</span>
+                            <span>Bu işlem <strong>@Model.Count</strong> tamamlanmamış görevin atanmış kişisini değiştirecek. Görev geçmişi ve yorumlar korunacaktır.</span>
+                        </div>
+                    </div>
+                    <div class="app-field">
+                        <label id="transferTargetTitle" for="hedefKullaniciId" class="app-label">Görevlerin devredileceği kullanıcı</label>
+                        <select id="hedefKullaniciId" name="hedefKullaniciId" required class="app-select">
+                            <option value="">Aktif kullanıcı seçin...</option>
+                            @foreach (var kullanici in hedefKullanicilar)
+                            {
+                                <option value="@kullanici.Id">@kullanici.TamAd</option>
+                            }
+                        </select>
+                        <p class="mt-2 text-xs leading-5 text-slate-500">Yalnız aktif ve görevleri devralabilecek kullanıcılar listelenir.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="app-surface overflow-hidden" aria-labelledby="transferTasksTitle">
+                <header class="flex flex-col gap-2 border-b border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h2 id="transferTasksTitle" class="section-title">Devredilecek görevler</h2>
+                        <p class="section-description">İşlem tamamlandığında aşağıdaki görevlerin atanan kişisi güncellenecek.</p>
+                    </div>
+                    <span class="status-badge status-badge--warning">@Model.Count görev</span>
+                </header>
+
+                <div class="soft-scroll overflow-x-auto" tabindex="0" aria-label="Devredilecek görev tablosu; yatay kaydırılabilir">
+                    <table class="w-full min-w-[760px] border-collapse text-left">
+                        <caption class="sr-only">@kaynakAd kullanıcısından devredilecek tamamlanmamış görevler</caption>
+                        <thead>
+                            <tr class="border-b border-slate-200 bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500">
+                                <th scope="col" class="p-4">Görev</th>
+                                <th scope="col" class="p-4">Durum</th>
+                                <th scope="col" class="p-4">Görevi oluşturan</th>
+                                <th scope="col" class="p-4">Oluşturulma</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @foreach (var gorev in Model)
+                            {
+                                var goreviVeren = gorev.OlusturanKullanici?.TamAd ?? "Eski kayıt";
+
+                                <tr class="transition hover:bg-slate-50/80">
+                                    <td class="p-4">
+                                        <a asp-controller="Gorev" asp-action="Detay" asp-route-id="@gorev.Id" class="font-bold text-slate-800 transition hover:text-teal-700">@gorev.Baslik</a>
+                                        @if (!string.IsNullOrWhiteSpace(gorev.Aciklama))
+                                        {
+                                            <p class="mt-1 max-w-2xl line-clamp-2 text-xs leading-5 text-slate-500">@gorev.Aciklama</p>
+                                        }
+                                    </td>
+                                    <td class="p-4"><partial name="_GorevDurumRozeti" model="gorev.Durum" /></td>
+                                    <td class="p-4 text-sm font-semibold text-slate-600">@goreviVeren</td>
+                                    <td class="p-4 text-sm text-slate-500"><time datetime="@gorev.OlusturulmaTarihi.ToString("O")">@gorev.OlusturulmaTarihi.ToString("dd.MM.yyyy")</time></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <div class="sticky-action-bar">
+                <div>
+                    <strong>@Model.Count görev devredilecek</strong>
+                    <span>İşlemden önce hedef kullanıcıyı tekrar kontrol edin.</span>
+                </div>
+                <div class="sticky-action-bar__actions">
+                    <a asp-controller="Kullanicilar" asp-action="Index" class="app-button app-button--secondary">Vazgeç</a>
+                    <button type="submit" class="app-button app-button--primary app-button--lg">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4M16 17H4m0 0l4 4m-4-4l4-4" />
+                        </svg>
+                        Görevleri devret
+                    </button>
+                </div>
+            </div>
+        </form>
+    }
+</div>

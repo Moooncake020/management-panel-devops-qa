@@ -1,0 +1,24 @@
+@{
+    ViewData["Title"] = "Yetkisiz Erişim";
+}
+
+<div class="mx-auto flex min-h-[68vh] max-w-3xl items-center justify-center px-4 py-12">
+    <section class="w-full rounded-[2rem] border border-slate-200 bg-white p-7 text-center shadow-sm sm:p-10" role="alert">
+        <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-red-50 text-red-600">
+            <svg class="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 15v2m-6 4h12a2 2 0 002-2v-7a2 2 0 00-2-2h-1V7a5 5 0 00-10 0v3H6a2 2 0 00-2 2v7a2 2 0 002 2zm3-11V7a3 3 0 016 0v3H9z" />
+            </svg>
+        </div>
+
+        <p class="mt-6 text-xs font-bold uppercase tracking-[0.22em] text-slate-400">403 · Yetki gerekli</p>
+        <h1 class="mt-2 text-2xl font-extrabold text-slate-800 sm:text-3xl">Bu alanı görüntüleme yetkiniz yok</h1>
+        <p class="mx-auto mt-3 max-w-xl text-sm leading-6 text-slate-500">
+            Hesabınız bu sayfa veya işlem için gerekli role sahip değil. Bunun bir hata olduğunu düşünüyorsanız sistem yöneticinizle iletişime geçin.
+        </p>
+
+        <div class="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+            <a asp-controller="Home" asp-action="Index" class="inline-flex h-11 items-center justify-center rounded-2xl bg-teal-600 px-5 text-sm font-bold text-white transition hover:bg-teal-700">Ana sayfaya dön</a>
+            <button type="button" data-history-back class="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-bold text-slate-600 transition hover:bg-slate-50">Önceki sayfaya dön</button>
+        </div>
+    </section>
+</div>

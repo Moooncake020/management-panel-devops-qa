@@ -1,0 +1,38 @@
+# .NET build çıktıları
+bin/
+obj/
+artifacts/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Node.js
+node_modules/
+
+# Test ve coverage çıktıları
+TestResults/
+coverage/
+*.trx
+*.coverage
+*.coveragexml
+
+# Log dosyaları
+logs/
+*.log
+
+# Yerel ortam ve secret dosyaları
+.env
+.env.*
+!.env.example
+appsettings.Local.json
+*.pfx
+*.p12
+
+# Kullanıcı yüklemeleri
+wwwroot/uploads/
+
+# Çalışma sırasında oluşan kullanıcı/test görselleri
+wwwroot/images/*
+!wwwroot/images/.gitkeep

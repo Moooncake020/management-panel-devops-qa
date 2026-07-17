@@ -1,0 +1,13 @@
+{
+  "name": "yonetim-paneli-frontend",
+  "private": true,
+  "scripts": {
+    "build:css": "tailwindcss -i ./Styles/tailwind.input.css -o ./wwwroot/css/tailwind.css --minify",
+    "check:frontend": "node ./Scripts/frontend-audit.mjs",
+    "check:project": "node ./Scripts/project-audit.mjs",
+    "check": "npm run build:css && npm run check:frontend && npm run check:project"
+  },
+  "devDependencies": {
+    "tailwindcss": "3.4.17"
+  }
+}

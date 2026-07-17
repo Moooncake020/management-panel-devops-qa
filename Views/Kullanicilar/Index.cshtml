@@ -1,0 +1,305 @@
+@model KullaniciIndexViewModel
+
+@{
+    ViewData["Title"] = "Kullanıcılar";
+    var kullaniciListesi = Model.Liste.Kullanicilar;
+
+    var aktifFiltreSayisi = 0;
+    if (!string.IsNullOrWhiteSpace(Model.Arama)) aktifFiltreSayisi++;
+    if (Model.Durum != "all") aktifFiltreSayisi++;
+    if (Model.Rol != "all") aktifFiltreSayisi++;
+    if (Model.DepartmanId.HasValue) aktifFiltreSayisi++;
+    if (Model.Siralama != "ad-asc") aktifFiltreSayisi++;
+    if (Model.SayfaBoyutu != 20) aktifFiltreSayisi++;
+
+    var filtreVarMi = aktifFiltreSayisi > 0;
+    var seciliDepartman = Model.YeniKullanici.Secenekler.Departmanlar
+        .FirstOrDefault(x => x.Id == Model.DepartmanId)?.Ad;
+
+    string DurumEtiketi(string deger) => deger switch
+    {
+        "aktif" => "Aktif kullanıcılar",
+        "pasif" => "Pasif kullanıcılar",
+        "kilitli" => "Giriş kilidi bulunanlar",
+        _ => deger
+    };
+
+    string RolEtiketi(string deger) => deger switch
+    {
+        "admin" => "Adminler",
+        "kullanici" => "Standart kullanıcılar",
+        _ => deger
+    };
+
+    string SiralamaEtiketi(string deger) => deger switch
+    {
+        "ad-desc" => "Ad Z–A",
+        "aktif-once" => "Aktifler önce",
+        "rol" => "Adminler önce",
+        _ => deger
+    };
+}
+
+<div id="userPage"
+     data-open-drawer="@Model.YeniKullaniciDrawerAcik.ToString().ToLowerInvariant()"
+     class="page-stack">
+    <section class="app-surface page-heading" aria-labelledby="pageTitle">
+        <div class="page-heading__content">
+            <div class="page-heading__icon" aria-hidden="true">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87M15 7a4 4 0 11-8 0 4 4 0 018 0zm6 4a3 3 0 10-6 0" />
+                </svg>
+            </div>
+            <div class="min-w-0">
+                <div class="page-eyebrow">Kullanıcı yönetimi</div>
+                <h1 id="pageTitle" class="page-title">Kullanıcılar</h1>
+                <p class="page-description">Hesapları, rollerı, organizasyon konumlarını ve erişim durumlarını tek ekrandan yönetin.</p>
+            </div>
+        </div>
+
+        <div class="page-heading__actions">
+            <a asp-controller="Organizasyon" asp-action="Yonetim" class="app-button app-button--secondary app-button--lg">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 21V10l8-7 8 7v11M9 21v-6h6v6" />
+                </svg>
+                Birimleri yönet
+            </a>
+            <button id="openNewUserDrawer"
+                    type="button"
+                    aria-controls="newUserDrawer"
+                    aria-expanded="false"
+                    class="app-button app-button--primary app-button--lg">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Yeni kullanıcı
+            </button>
+        </div>
+    </section>
+
+    <section aria-label="Kullanıcı durum özetleri" class="user-summary-grid">
+        <a asp-action="Index"
+           asp-route-durum="aktif"
+           asp-route-sayfaBoyutu="@Model.SayfaBoyutu"
+           class="user-summary user-summary--active @(Model.Durum == "aktif" ? "is-active" : "")">
+            <span class="user-summary__label">Aktif</span>
+            <strong class="user-summary__value">@Model.AktifSayisi</strong>
+            <span class="user-summary__hint">Sisteme erişebilir</span>
+        </a>
+        <a asp-action="Index"
+           asp-route-durum="pasif"
+           asp-route-sayfaBoyutu="@Model.SayfaBoyutu"
+           class="user-summary user-summary--passive @(Model.Durum == "pasif" ? "is-active" : "")">
+            <span class="user-summary__label">Pasif</span>
+            <strong class="user-summary__value">@Model.PasifSayisi</strong>
+            <span class="user-summary__hint">Erişimi kapalı</span>
+        </a>
+        <a asp-action="Index"
+           asp-route-rol="admin"
+           asp-route-sayfaBoyutu="@Model.SayfaBoyutu"
+           class="user-summary user-summary--admin @(Model.Rol == "admin" ? "is-active" : "")">
+            <span class="user-summary__label">Admin</span>
+            <strong class="user-summary__value">@Model.AdminSayisi</strong>
+            <span class="user-summary__hint">Yönetim yetkili</span>
+        </a>
+        <a asp-action="Index"
+           asp-route-durum="kilitli"
+           asp-route-sayfaBoyutu="@Model.SayfaBoyutu"
+           class="user-summary user-summary--locked @(Model.Durum == "kilitli" ? "is-active" : "")">
+            <span class="user-summary__label">Kilitli</span>
+            <strong class="user-summary__value">@Model.KilitliSayisi</strong>
+            <span class="user-summary__hint">Müdahale gerekiyor</span>
+        </a>
+    </section>
+
+    <section class="app-surface app-surface--flush" aria-labelledby="userListTitle">
+        <div class="user-list-header">
+            <div>
+                <h2 id="userListTitle" class="section-title">Kullanıcı listesi</h2>
+                <p class="section-description">
+                    <strong>@Model.FiltrelenmisToplamSayisi</strong> kullanıcı eşleşiyor
+                    @if (Model.FiltrelenmisToplamSayisi > 0)
+                    {
+                        <span>· sayfada <strong>@kullaniciListesi.Count</strong> kayıt</span>
+                    }
+                </p>
+            </div>
+
+            <div class="view-switcher" role="group" aria-label="Kullanıcı görünümü">
+                <button type="button" class="view-switcher__button" data-user-view="cards" aria-pressed="false" title="Kart görünümü">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4h6v6H4V4zm10 0h6v6h-6V4zM4 14h6v6H4v-6zm10 0h6v6h-6v-6z" />
+                    </svg>
+                    <span>Kart</span>
+                </button>
+                <button type="button" class="view-switcher__button" data-user-view="table" aria-pressed="false" title="Tablo görünümü">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                    <span>Tablo</span>
+                </button>
+            </div>
+        </div>
+
+        <form asp-action="Index" method="get" id="userFilterForm" role="search" class="user-filter-form">
+            <div class="user-toolbar">
+                <div class="user-search-box">
+                    <label asp-for="Arama" class="sr-only">Kullanıcılarda ara</label>
+                    <svg class="user-search-box__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m1.35-5.65a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input asp-for="Arama"
+                           type="search"
+                           autocomplete="off"
+                           placeholder="Ad, e-posta, departman, unvan veya yönetici ara..."
+                           class="app-input user-search-box__input" />
+                    <button type="submit" class="app-button app-button--primary">Ara</button>
+                </div>
+
+                <button id="userFilterToggle"
+                        type="button"
+                        class="app-button app-button--secondary"
+                        aria-controls="userAdvancedFilters"
+                        aria-expanded="@(filtreVarMi ? "true" : "false")">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h18l-7 8v6l-4 2v-8L3 4z" />
+                    </svg>
+                    Filtreler
+                    @if (aktifFiltreSayisi > 0)
+                    {
+                        <span class="filter-count">@aktifFiltreSayisi</span>
+                    }
+                </button>
+            </div>
+
+            <div id="userAdvancedFilters"
+                 class="filter-panel @(filtreVarMi ? "is-open" : "")"
+                 aria-hidden="@(filtreVarMi ? "false" : "true")">
+                <div class="filter-panel__header">
+                    <div>
+                        <h3 class="filter-panel__title">Gelişmiş filtreler</h3>
+                        <p class="filter-panel__description">Hesap durumuna, role ve organizasyon birimine göre sonuçları daraltın.</p>
+                    </div>
+                    @if (filtreVarMi)
+                    {
+                        <a asp-action="Index" class="app-button app-button--tertiary app-button--sm">Tümünü temizle</a>
+                    }
+                </div>
+
+                <div class="filter-grid user-filter-grid">
+                    <div class="app-field">
+                        <label asp-for="Durum" class="app-label">Hesap durumu</label>
+                        <select asp-for="Durum" class="app-select">
+                            <option value="all">Tüm durumlar</option>
+                            <option value="aktif">Aktif</option>
+                            <option value="pasif">Pasif</option>
+                            <option value="kilitli">Giriş kilidi bulunan</option>
+                        </select>
+                    </div>
+                    <div class="app-field">
+                        <label asp-for="Rol" class="app-label">Sistem rolü</label>
+                        <select asp-for="Rol" class="app-select">
+                            <option value="all">Tüm roller</option>
+                            <option value="admin">Admin</option>
+                            <option value="kullanici">Standart kullanıcı</option>
+                        </select>
+                    </div>
+                    <div class="app-field">
+                        <label asp-for="DepartmanId" class="app-label">Departman</label>
+                        <select asp-for="DepartmanId" class="app-select">
+                            <option value="">Tüm departmanlar</option>
+                            @foreach (var departman in Model.YeniKullanici.Secenekler.Departmanlar)
+                            {
+                                <option value="@departman.Id">@departman.Ad</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="app-field">
+                        <label asp-for="Siralama" class="app-label">Sıralama</label>
+                        <select asp-for="Siralama" class="app-select">
+                            <option value="ad-asc">Ad A–Z</option>
+                            <option value="ad-desc">Ad Z–A</option>
+                            <option value="aktif-once">Aktifler önce</option>
+                            <option value="rol">Adminler önce</option>
+                        </select>
+                    </div>
+                    <div class="app-field">
+                        <label asp-for="SayfaBoyutu" class="app-label">Sayfa boyutu</label>
+                        <select asp-for="SayfaBoyutu" class="app-select">
+                            <option value="10">10 kayıt</option>
+                            <option value="20">20 kayıt</option>
+                            <option value="50">50 kayıt</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="filter-panel__actions">
+                    <button type="submit" class="app-button app-button--primary">Filtreleri uygula</button>
+                    <button type="button" class="app-button app-button--tertiary" data-user-filter-panel-close>Paneli kapat</button>
+                </div>
+            </div>
+        </form>
+
+        @if (filtreVarMi)
+        {
+            <div class="active-filters" aria-label="Aktif kullanıcı filtreleri">
+                <span class="active-filters__label">Aktif filtreler:</span>
+                @if (!string.IsNullOrWhiteSpace(Model.Arama))
+                {
+                    <button type="button" class="filter-chip" data-user-filter-clear="Arama"><span>Arama: @Model.Arama</span><span aria-hidden="true">×</span></button>
+                }
+                @if (Model.Durum != "all")
+                {
+                    <button type="button" class="filter-chip" data-user-filter-clear="Durum"><span>@DurumEtiketi(Model.Durum)</span><span aria-hidden="true">×</span></button>
+                }
+                @if (Model.Rol != "all")
+                {
+                    <button type="button" class="filter-chip" data-user-filter-clear="Rol"><span>@RolEtiketi(Model.Rol)</span><span aria-hidden="true">×</span></button>
+                }
+                @if (Model.DepartmanId.HasValue)
+                {
+                    <button type="button" class="filter-chip" data-user-filter-clear="DepartmanId"><span>Departman: @seciliDepartman</span><span aria-hidden="true">×</span></button>
+                }
+                @if (Model.Siralama != "ad-asc")
+                {
+                    <button type="button" class="filter-chip" data-user-filter-clear="Siralama"><span>@SiralamaEtiketi(Model.Siralama)</span><span aria-hidden="true">×</span></button>
+                }
+                @if (Model.SayfaBoyutu != 20)
+                {
+                    <button type="button" class="filter-chip" data-user-filter-clear="SayfaBoyutu"><span>@Model.SayfaBoyutu kayıt</span><span aria-hidden="true">×</span></button>
+                }
+            </div>
+        }
+
+        <div id="userResults" class="user-results">
+            @if (!kullaniciListesi.Any())
+            {
+                <div class="empty-state">
+                    <div class="empty-state__icon" aria-hidden="true">⌕</div>
+                    <h3 class="empty-state__title">Eşleşen kullanıcı bulunamadı</h3>
+                    <p class="empty-state__description">Filtreleri değiştirin veya yeni kullanıcı oluşturun.</p>
+                    <div class="empty-state__actions">
+                        @if (filtreVarMi)
+                        {
+                            <a asp-action="Index" class="app-button app-button--secondary">Filtreleri temizle</a>
+                        }
+                        <button type="button" class="app-button app-button--primary" data-open-user-drawer>Yeni kullanıcı</button>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <partial name="_KullaniciKartlari" model="Model.Liste" />
+                <partial name="_KullaniciTablosu" model="Model.Liste" />
+                <partial name="_Sayfalama" model="Model.Sayfalama" />
+            }
+        </div>
+    </section>
+</div>
+
+<partial name="_YeniKullaniciDrawer" model="Model.YeniKullanici" />
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/pages/kullanicilar-index.js" asp-append-version="true" defer></script>
+}

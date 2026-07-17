@@ -1,0 +1,197 @@
+@model HomeIndexViewModel
+
+@{
+    ViewData["Title"] = "Anasayfa";
+    var toplam = Math.Max(Model.ToplamGorev, 1);
+    int Yuzde(int sayi) => (int)Math.Round((double)sayi / toplam * 100);
+    var riskToplami = Model.Geciken + Model.BugunBiten + Model.KritikAktif;
+}
+
+<div class="page-stack dashboard-page">
+    <section class="app-surface dashboard-hero" aria-labelledby="dashboard-title">
+        <div class="dashboard-hero__content">
+            <div class="page-heading__content">
+                <div class="page-heading__icon dashboard-hero__icon" aria-hidden="true">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h10M4 18h7" />
+                    </svg>
+                </div>
+                <div>
+                    <div class="page-eyebrow">Günlük çalışma alanı</div>
+                    <h1 id="dashboard-title" class="page-title">Öncelikli işlerinizi tek ekrandan yönetin</h1>
+                    <p class="page-description">Riskli teslimleri önce görün, ekip iş yükünü değerlendirin ve görev kayıtlarına hızlıca ulaşın.</p>
+                </div>
+            </div>
+
+            <div class="dashboard-hero__actions">
+                <a asp-controller="Gorev" asp-action="Index" class="app-button app-button--secondary">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                    Tüm görevler
+                </a>
+                <a asp-controller="Gorev" asp-action="Ekle" class="app-button app-button--primary">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                    Yeni görev
+                </a>
+            </div>
+        </div>
+
+        <div class="dashboard-hero__signal @(riskToplami > 0 ? "dashboard-hero__signal--warning" : "dashboard-hero__signal--success")">
+            <div class="dashboard-hero__signal-icon" aria-hidden="true">
+                @if (riskToplami > 0)
+                {
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5.07 19h13.86a2 2 0 001.74-3L13.74 4a2 2 0 00-3.48 0L3.33 16A2 2 0 005.07 19z" /></svg>
+                }
+                else
+                {
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                }
+            </div>
+            <div>
+                <strong>@(riskToplami > 0 ? $"{riskToplami} risk sinyali" : "Riskli teslim görünmüyor")</strong>
+                <span>@(riskToplami > 0 ? "Geciken, bugün biten veya kritik aktif görevleri inceleyin." : "Mevcut görev planı zaman açısından dengeli görünüyor.")</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="dashboard-metrics" aria-label="Görev metrikleri">
+        <a asp-controller="Gorev" asp-action="Index" class="dashboard-metric">
+            <span class="dashboard-metric__label">Toplam görev</span>
+            <strong class="dashboard-metric__value">@Model.ToplamGorev</strong>
+            <span class="dashboard-metric__detail">Yetki kapsamınızdaki kayıtlar</span>
+        </a>
+        <a asp-controller="Gorev" asp-action="Index" asp-route-tarih="geciken" class="dashboard-metric dashboard-metric--danger">
+            <span class="dashboard-metric__label">Geciken</span>
+            <strong class="dashboard-metric__value">@Model.Geciken</strong>
+            <span class="dashboard-metric__detail">Hemen değerlendirilmesi gerekenler</span>
+        </a>
+        <a asp-controller="Gorev" asp-action="Index" asp-route-tarih="bugun" class="dashboard-metric dashboard-metric--warning">
+            <span class="dashboard-metric__label">Bugün biten</span>
+            <strong class="dashboard-metric__value">@Model.BugunBiten</strong>
+            <span class="dashboard-metric__detail">Günün teslim planı</span>
+        </a>
+        <a asp-controller="Gorev" asp-action="Index" asp-route-durum="aktif" asp-route-oncelik="kritik" class="dashboard-metric dashboard-metric--critical">
+            <span class="dashboard-metric__label">Kritik aktif</span>
+            <strong class="dashboard-metric__value">@Model.KritikAktif</strong>
+            <span class="dashboard-metric__detail">Tamamlanmamış kritik işler</span>
+        </a>
+    </section>
+
+    <div class="dashboard-grid">
+        <section class="app-surface app-surface--flush dashboard-priority" aria-labelledby="priority-title">
+            <header class="dashboard-section-header">
+                <div>
+                    <div class="page-eyebrow">Önce bunlara bakın</div>
+                    <h2 id="priority-title" class="section-title">Dikkat gerektiren görevler</h2>
+                    <p class="section-description">Geciken, bugün biten veya kritik öncelikli kayıtlar.</p>
+                </div>
+                <a asp-controller="Gorev" asp-action="Index" asp-route-durum="aktif" class="app-button app-button--tertiary app-button--sm">Aktif görevleri aç</a>
+            </header>
+
+            @if (!Model.DikkatGerektirenGorevler.Any())
+            {
+                <div class="dashboard-inline-empty">
+                    <div class="dashboard-inline-empty__icon" aria-hidden="true"><svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg></div>
+                    <div><strong>Acil müdahale gerektiren görev yok</strong><span>Yeni risk oluştuğunda bu alan otomatik olarak güncellenecek.</span></div>
+                </div>
+            }
+            else
+            {
+                <div class="dashboard-task-list">
+                    @foreach (var gorev in Model.DikkatGerektirenGorevler)
+                    {
+                        <article class="dashboard-task-row">
+                            <div class="dashboard-task-row__marker @(gorev.GeciktiMi ? "is-danger" : gorev.BugunBitiyorMu ? "is-warning" : "is-critical")" aria-hidden="true"></div>
+                            <div class="dashboard-task-row__content">
+                                <a asp-controller="Gorev" asp-action="Detay" asp-route-id="@gorev.Id" class="dashboard-task-row__title">@gorev.Baslik</a>
+                                <div class="dashboard-task-row__meta">
+                                    <partial name="_GorevDurumRozeti" model="gorev.Durum" />
+                                    <partial name="_GorevOncelikRozeti" model="gorev.Oncelik" />
+                                    <span>@gorev.AtananKisi</span>
+                                </div>
+                            </div>
+                            <div class="dashboard-task-row__date @(gorev.GeciktiMi ? "is-danger" : gorev.BugunBitiyorMu ? "is-warning" : "")">
+                                <strong>@gorev.KalanGunMetni</strong>
+                                <span>@(gorev.SonTarih?.ToString("dd.MM.yyyy") ?? "Son tarih yok")</span>
+                            </div>
+                        </article>
+                    }
+                </div>
+            }
+        </section>
+
+        <aside class="dashboard-side-stack">
+            <section class="app-surface dashboard-progress" aria-labelledby="progress-title">
+                <header class="dashboard-section-header dashboard-section-header--compact">
+                    <div>
+                        <h2 id="progress-title" class="section-title">Durum dağılımı</h2>
+                        <p class="section-description">Toplam iş yükünün aşamalara göre görünümü.</p>
+                    </div>
+                    <div class="dashboard-completion"><span>Tamamlanma</span><strong>%@Model.TamamlanmaOrani</strong></div>
+                </header>
+
+                <div class="dashboard-progress-list">
+                    @foreach (var durum in new[]
+                    {
+                        new { Ad = "Açık", Deger = Model.AcikGorev, Sinif = "is-open" },
+                        new { Ad = "Devam ediyor", Deger = Model.DevamEden, Sinif = "is-progress" },
+                        new { Ad = "QA / Test", Deger = Model.QaBekleyen, Sinif = "is-qa" },
+                        new { Ad = "Bug / Hata", Deger = Model.BugHata, Sinif = "is-bug" },
+                        new { Ad = "Tamamlandı", Deger = Model.Tamamlanan, Sinif = "is-completed" }
+                    })
+                    {
+                        var ilerlemeYuzdesi = Math.Clamp(Yuzde(durum.Deger), 0, 100);
+                        <div class="dashboard-progress-item @durum.Sinif">
+                            <div class="dashboard-progress-item__head"><span>@durum.Ad</span><strong>@durum.Deger</strong></div>
+                            <div class="dashboard-progress-item__track" role="progressbar" aria-label="@durum.Ad görev oranı" aria-valuemin="0" aria-valuemax="100" aria-valuenow="@ilerlemeYuzdesi"><span class="progress-width-@ilerlemeYuzdesi"></span></div>
+                        </div>
+                    }
+                </div>
+
+                <div class="dashboard-week-result"><span>Bu hafta tamamlanan</span><strong>@Model.BuHaftaTamamlanan</strong></div>
+            </section>
+
+            <section class="app-surface dashboard-quick-actions" aria-labelledby="quick-title">
+                <h2 id="quick-title" class="section-title">Hızlı işlemler</h2>
+                <div class="dashboard-quick-actions__list">
+                    <a asp-controller="Gorev" asp-action="Ekle"><span class="dashboard-quick-actions__icon" aria-hidden="true">+</span><span><strong>Görev oluştur</strong><small>Yeni bir işi planlayın</small></span></a>
+                    <a asp-controller="Profil" asp-action="Index"><span class="dashboard-quick-actions__icon" aria-hidden="true"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A7 7 0 0112 15a7 7 0 016.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg></span><span><strong>Profilimi aç</strong><small>Kişisel iş yükünüzü görün</small></span></a>
+                    <a asp-controller="Organizasyon" asp-action="Index"><span class="dashboard-quick-actions__icon" aria-hidden="true"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87M15 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg></span><span><strong>Organizasyonu incele</strong><small>Ekip yapısına ulaşın</small></span></a>
+                </div>
+            </section>
+        </aside>
+    </div>
+
+    <section class="app-surface app-surface--flush" aria-labelledby="recent-title">
+        <header class="dashboard-section-header">
+            <div>
+                <div class="page-eyebrow">Yeni kayıtlar</div>
+                <h2 id="recent-title" class="section-title">Son eklenen görevler</h2>
+                <p class="section-description">Görev havuzuna en son eklenen kayıtlar.</p>
+            </div>
+            <a asp-controller="Gorev" asp-action="Index" class="app-button app-button--secondary app-button--sm">Tümünü görüntüle</a>
+        </header>
+
+        @if (!Model.SonGorevler.Any())
+        {
+            <div class="empty-state dashboard-empty-state">
+                <div class="empty-state__icon" aria-hidden="true">✓</div>
+                <h3 class="empty-state__title">Henüz görev bulunmuyor</h3>
+                <p class="empty-state__description">İlk görevi oluşturarak çalışma alanını kullanmaya başlayın.</p>
+                <div class="empty-state__actions"><a asp-controller="Gorev" asp-action="Ekle" class="app-button app-button--primary">Yeni görev</a></div>
+            </div>
+        }
+        else
+        {
+            <div class="dashboard-recent-grid">
+                @foreach (var gorev in Model.SonGorevler)
+                {
+                    <a asp-controller="Gorev" asp-action="Detay" asp-route-id="@gorev.Id" class="dashboard-recent-card">
+                        <div class="dashboard-recent-card__head"><partial name="_GorevDurumRozeti" model="gorev.Durum" /><span>@gorev.OlusturulmaTarihi.ToString("dd.MM.yyyy")</span></div>
+                        <h3>@gorev.Baslik</h3>
+                        <div class="dashboard-recent-card__meta"><span>@gorev.AtananKisi</span><strong class="@(gorev.GeciktiMi ? "is-danger" : gorev.BugunBitiyorMu ? "is-warning" : "")">@gorev.KalanGunMetni</strong></div>
+                    </a>
+                }
+            </div>
+        }
+    </section>
+</div>

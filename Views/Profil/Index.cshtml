@@ -1,0 +1,220 @@
+@model ProfilIndexViewModel
+
+@{
+    ViewData["Title"] = Model.KendiProfiliMi ? "Profilim" : Model.TamAd;
+    var durumToplami = Math.Max(Model.ToplamAtananGorev, 1);
+    int Oran(int sayi) => (int)Math.Round((double)sayi / durumToplami * 100);
+}
+
+<div id="profilePage" class="page-stack profile-page">
+    <section class="app-surface profile-summary" aria-labelledby="profile-title">
+        <div class="profile-summary__identity">
+            <div class="profile-avatar" aria-hidden="true">@Model.BasHarfler</div>
+            <div class="profile-summary__copy">
+                <div class="profile-summary__status-line">
+                    <span class="status-pill @(Model.AktifMi ? "status-pill--success" : "status-pill--danger")">
+                        <span aria-hidden="true"></span>@(Model.AktifMi ? "Aktif hesap" : "Pasif hesap")
+                    </span>
+                    @if (Model.SistemRolu == "Admin")
+                    {
+                        <span class="status-pill status-pill--admin">Admin</span>
+                    }
+                    @if (Model.KendiProfiliMi)
+                    {
+                        <span class="status-pill">Profiliniz</span>
+                    }
+                </div>
+                <h1 id="profile-title" class="profile-summary__name">@Model.TamAd</h1>
+                <p class="profile-summary__role">@Model.UnvanAdi <span aria-hidden="true">·</span> @Model.DepartmanAdi</p>
+                <a href="mailto:@Model.Email" class="profile-summary__email">@Model.Email</a>
+            </div>
+        </div>
+
+        <div class="profile-summary__actions">
+            @if (Model.KendiProfiliMi)
+            {
+                <a asp-controller="Auth" asp-action="SifreDegistir" class="app-button app-button--secondary">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4" /></svg>
+                    Şifre değiştir
+                </a>
+            }
+            @if (Model.IsYukuGorebilirMi)
+            {
+                <a asp-controller="Gorev" asp-action="Index" asp-route-atanan="@Model.KullaniciId" class="app-button app-button--primary">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                    Görevleri aç
+                </a>
+            }
+            @if (Model.DuzenleyebilirMi)
+            {
+                <a asp-controller="Kullanicilar" asp-action="Duzenle" asp-route-id="@Model.KullaniciId" class="app-button app-button--secondary">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                    Düzenle
+                </a>
+            }
+        </div>
+
+        <dl class="profile-facts">
+            <div><dt>Kıdem</dt><dd>@Model.KidemAdi</dd></div>
+            <div><dt>Organizasyon rolü</dt><dd>@Model.OrganizasyonRoluAdi</dd></div>
+            <div><dt>Sistem rolü</dt><dd>@Model.SistemRolu</dd></div>
+            <div><dt>Doğrudan ast</dt><dd>@Model.DogrudanAstlar.Count</dd></div>
+        </dl>
+    </section>
+
+    @if (!Model.IsYukuGorebilirMi)
+    {
+        <section class="app-alert profile-access-alert" role="note">
+            <div class="app-alert__icon" aria-hidden="true"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2h-1V8a5 5 0 00-10 0v3H6a2 2 0 00-2 2v6a2 2 0 002 2zm3-10V8a3 3 0 016 0v3H9z" /></svg></div>
+            <div><strong>İş yükü bilgileri sınırlı</strong><p>Kurumsal profil bilgilerini görebilirsiniz. Görev metrikleri yalnızca kullanıcıya, yöneticilerine ve sistem yöneticilerine açıktır.</p></div>
+        </section>
+    }
+
+    <div class="profile-layout">
+        <main class="profile-main">
+            @if (Model.IsYukuGorebilirMi)
+            {
+                <section class="profile-metrics" aria-label="Kişisel iş yükü metrikleri">
+                    <a asp-controller="Gorev" asp-action="Index" asp-route-atanan="@Model.KullaniciId" asp-route-durum="aktif" class="profile-metric">
+                        <span>Aktif görev</span><strong>@Model.AktifGorev</strong><small>Devam eden iş yükü</small>
+                    </a>
+                    <a asp-controller="Gorev" asp-action="Index" asp-route-atanan="@Model.KullaniciId" asp-route-tarih="geciken" class="profile-metric profile-metric--danger">
+                        <span>Geciken</span><strong>@Model.GecikenGorev</strong><small>Plan dışına çıkanlar</small>
+                    </a>
+                    <a asp-controller="Gorev" asp-action="Index" asp-route-atanan="@Model.KullaniciId" asp-route-tarih="bugun" class="profile-metric profile-metric--warning">
+                        <span>Bugün biten</span><strong>@Model.BugunBitenGorev</strong><small>Günün teslimleri</small>
+                    </a>
+                    <a asp-controller="Gorev" asp-action="Index" asp-route-atanan="@Model.KullaniciId" asp-route-oncelik="kritik" class="profile-metric profile-metric--critical">
+                        <span>Kritik aktif</span><strong>@Model.KritikAktifGorev</strong><small>Yüksek riskli görevler</small>
+                    </a>
+                </section>
+
+                <section class="app-surface profile-workload" aria-labelledby="workload-title">
+                    <header class="profile-section-header">
+                        <div><div class="page-eyebrow">Performans görünümü</div><h2 id="workload-title" class="section-title">İş yükü dağılımı</h2><p class="section-description">Atanmış görevlerin güncel durumlara göre dağılımı.</p></div>
+                        <div class="profile-completion" aria-label="Tamamlanma oranı"><strong>%@Model.TamamlanmaOrani</strong><span>Tamamlanma</span></div>
+                    </header>
+
+                    <div class="profile-workload__body">
+                        <div class="profile-distribution">
+                            @foreach (var durum in new[]
+                            {
+                                new { Ad = "Açık", Deger = Model.AcikGorev, Sinif = "is-open" },
+                                new { Ad = "Devam ediyor", Deger = Model.DevamEdenGorev, Sinif = "is-progress" },
+                                new { Ad = "QA / Test", Deger = Model.QaGorevi, Sinif = "is-qa" },
+                                new { Ad = "Bug / Hata", Deger = Model.BugHataGorevi, Sinif = "is-bug" },
+                                new { Ad = "Tamamlandı", Deger = Model.TamamlananGorev, Sinif = "is-completed" }
+                            })
+                            {
+                                var durumYuzdesi = Math.Clamp(Oran(durum.Deger), 0, 100);
+                                <div class="profile-distribution__item @durum.Sinif">
+                                    <div><span>@durum.Ad</span><strong>@durum.Deger</strong></div>
+                                    <div class="profile-distribution__track" role="progressbar" aria-label="@durum.Ad görev oranı" aria-valuemin="0" aria-valuemax="100" aria-valuenow="@durumYuzdesi"><span class="progress-width-@durumYuzdesi"></span></div>
+                                </div>
+                            }
+                        </div>
+                        <dl class="profile-output-summary">
+                            <div><dt>Toplam atanan</dt><dd>@Model.ToplamAtananGorev</dd></div>
+                            <div><dt>Tamamlanan</dt><dd>@Model.TamamlananGorev</dd></div>
+                            <div><dt>Bu hafta tamamlanan</dt><dd>@Model.BuHaftaTamamlanan</dd></div>
+                            <div><dt>Oluşturduğu görev</dt><dd>@Model.OlusturduguGorev</dd></div>
+                        </dl>
+                    </div>
+                </section>
+
+                <section class="app-surface app-surface--flush profile-activity-panel">
+                    <div class="profile-tabs" role="tablist" aria-label="Profil görev ve aktiviteleri">
+                        <button type="button" role="tab" id="profileTasksTab" aria-controls="profileTasksPanel" aria-selected="true" tabindex="0" data-profile-tab="tasks" class="profile-tab is-active">Öncelikli görevler <span>@Model.SonGorevler.Count</span></button>
+                        <button type="button" role="tab" id="profileActivityTab" aria-controls="profileActivityPanel" aria-selected="false" tabindex="-1" data-profile-tab="activity" class="profile-tab">Son aktiviteler <span>@Model.SonAktiviteler.Count</span></button>
+                    </div>
+
+                    <div id="profileTasksPanel" role="tabpanel" aria-labelledby="profileTasksTab" data-profile-panel="tasks">
+                        @if (!Model.SonGorevler.Any())
+                        {
+                            <div class="profile-panel-empty"><strong>Atanmış görev bulunmuyor</strong><span>Bu kullanıcıya görev atandığında burada görüntülenecek.</span></div>
+                        }
+                        else
+                        {
+                            <div class="profile-task-list">
+                                @foreach (var gorev in Model.SonGorevler)
+                                {
+                                    <article class="profile-task-row">
+                                        <div class="profile-task-row__content">
+                                            <a asp-controller="Gorev" asp-action="Detay" asp-route-id="@gorev.Id">@gorev.Baslik</a>
+                                            <div><partial name="_GorevDurumRozeti" model="gorev.Durum" /><partial name="_GorevOncelikRozeti" model="gorev.Oncelik" /><span>Veren: @gorev.GoreviVeren</span></div>
+                                        </div>
+                                        <div class="profile-task-row__date @(gorev.GeciktiMi ? "is-danger" : gorev.BugunBitiyorMu ? "is-warning" : "")"><strong>@gorev.KalanGunMetni</strong><span>@(gorev.SonTarih?.ToString("dd.MM.yyyy") ?? "Son tarih yok")</span></div>
+                                    </article>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    <div id="profileActivityPanel" role="tabpanel" aria-labelledby="profileActivityTab" data-profile-panel="activity" hidden>
+                        @if (!Model.SonAktiviteler.Any())
+                        {
+                            <div class="profile-panel-empty"><strong>Henüz aktivite bulunmuyor</strong><span>Görevlerde işlem yapıldığında aktivite akışı burada görünecek.</span></div>
+                        }
+                        else
+                        {
+                            <ol class="profile-timeline">
+                                @foreach (var aktivite in Model.SonAktiviteler)
+                                {
+                                    <li>
+                                        <span class="profile-timeline__dot" aria-hidden="true"></span>
+                                        <div><a asp-controller="Gorev" asp-action="Detay" asp-route-id="@aktivite.GorevId">@aktivite.GorevBasligi</a><p>@aktivite.Aciklama</p><small>@aktivite.IslemiYapan · <time datetime="@aktivite.OlusturulmaTarihi.ToString("O")">@aktivite.OlusturulmaTarihi.ToString("dd.MM.yyyy HH:mm")</time></small></div>
+                                    </li>
+                                }
+                            </ol>
+                        }
+                    </div>
+                </section>
+            }
+        </main>
+
+        <aside class="profile-sidebar">
+            <section class="app-surface profile-people-card">
+                <header><div class="profile-people-card__icon" aria-hidden="true"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A7 7 0 0112 15a7 7 0 016.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg></div><div><h2>Yönetici</h2><p>Doğrudan raporlama ilişkisi</p></div></header>
+                @if (Model.Yonetici == null)
+                {
+                    <div class="profile-person-empty">Yönetici atanmamış.</div>
+                }
+                else
+                {
+                    <a asp-controller="Profil" asp-action="Index" asp-route-id="@Model.Yonetici.Id" class="profile-person-link"><span class="profile-person-avatar">@Model.Yonetici.BasHarfler</span><span><strong>@Model.Yonetici.TamAd</strong><small>@Model.Yonetici.UnvanAdi</small></span><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg></a>
+                }
+            </section>
+
+            <section class="app-surface profile-people-card">
+                <header><div class="profile-people-card__icon" aria-hidden="true"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87M15 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg></div><div><h2>Doğrudan astlar</h2><p>@Model.DogrudanAstlar.Count kullanıcı</p></div></header>
+                @if (!Model.DogrudanAstlar.Any())
+                {
+                    <div class="profile-person-empty">Doğrudan bağlı kullanıcı yok.</div>
+                }
+                else
+                {
+                    <div class="profile-people-list">
+                        @foreach (var ast in Model.DogrudanAstlar.Take(8))
+                        {
+                            <a asp-controller="Profil" asp-action="Index" asp-route-id="@ast.Id" class="profile-person-link"><span class="profile-person-avatar">@ast.BasHarfler</span><span><strong>@ast.TamAd</strong><small>@ast.UnvanAdi</small></span><i class="@(ast.AktifMi ? "is-active" : "is-passive")" aria-label="@(ast.AktifMi ? "Aktif" : "Pasif")"></i></a>
+                        }
+                    </div>
+                }
+            </section>
+
+            <section class="app-surface profile-contact-card">
+                <h2>Kurumsal bilgiler</h2>
+                <dl>
+                    <div><dt>Departman</dt><dd>@Model.DepartmanAdi</dd></div>
+                    <div><dt>Unvan</dt><dd>@Model.UnvanAdi</dd></div>
+                    <div><dt>Kıdem</dt><dd>@Model.KidemAdi</dd></div>
+                    <div><dt>E-posta</dt><dd><a href="mailto:@Model.Email">@Model.Email</a></dd></div>
+                </dl>
+            </section>
+        </aside>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/pages/profile-index.js" asp-append-version="true" defer></script>
+}
