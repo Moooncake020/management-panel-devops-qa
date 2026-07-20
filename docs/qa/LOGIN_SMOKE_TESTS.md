@@ -160,7 +160,7 @@ Kullanıcı sisteme giriş yapmış olmalı.
 - Korumalı sayfa tekrar görüntülenmemeli.
 - Gerekirse giriş sayfasına yönlendirilmeli.
 
-**Durum:** `FAIL`
+**Durum:** `PASS`
 
 **Gerçek sonuç**
 
