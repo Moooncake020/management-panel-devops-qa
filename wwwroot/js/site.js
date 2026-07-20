@@ -176,4 +176,10 @@
         });
         scrollRegions.forEach((region) => observer.observe(region));
     }
+
+	window.addEventListener("pageshow", function (event) {
+		if (event.persisted) {
+			window.location.reload();
+		}
+});
 })();

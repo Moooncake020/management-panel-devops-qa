@@ -46,6 +46,7 @@ static bool JsonCevapBekleniyor(HttpRequest request)
 builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+    options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
 });
 
 // Ters proxy arkasında gerçek istemci IP'si ve HTTPS bilgisinin güvenli
