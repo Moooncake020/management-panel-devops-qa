@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/tests/">
+    <Project Path="tests/YonetimPaneli.Tests/YonetimPaneli.Tests.csproj" />
+  </Folder>
+  <Project Path="yonetimpaneli.csproj" />
+</Solution>
